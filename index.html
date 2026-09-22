@@ -178,22 +178,23 @@
     padding:14px 0; margin:2px 0 0;
   }
 
-  .scroll-cue{
-    display:block; text-align:center; color:var(--ink-soft); font-size:13px;
-    text-decoration:none; margin:0 0 20px; padding:2px;
-  }
-  .scroll-cue:hover{color:var(--primary);}
-
-  /* ---------- quick nav ---------- */
-  .quicknav{
-    display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:28px;
+  /* ---------- tabs ---------- */
+  .tabbar{
+    display:flex; gap:2px; overflow-x:auto; margin-bottom:22px;
+    border-bottom:1px solid var(--line); position:sticky;
+    top:env(safe-area-inset-top,0px); background:var(--bg); z-index:5;
     -ms-overflow-style:none; scrollbar-width:thin;
   }
-  .chip{
-    border:1px solid var(--line); background:var(--bg-card); color:var(--ink-soft);
-    padding:7px 13px; border-radius:999px; font-size:13px; text-decoration:none; white-space:nowrap; flex:none;
+  .tab{
+    border:none; background:transparent; color:var(--ink-soft);
+    padding:11px 15px; font-size:14px; font-family:'Inter',sans-serif;
+    cursor:pointer; white-space:nowrap; flex:none;
+    border-bottom:2px solid transparent; margin-bottom:-1px;
   }
-  .chip:hover{color:var(--ink); border-color:var(--primary);}
+  .tab:hover{color:var(--ink);}
+  .tab.active{color:var(--ink); font-weight:600; border-bottom-color:var(--primary);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
 
   /* ---------- sections ---------- */
   section.block{
@@ -333,79 +334,85 @@
     </div>
   </section>
 
-  <a class="scroll-cue" href="#sec-income">↓ Заполняйте цифры в разделах ниже</a>
+  <div class="tabbar" role="tablist">
+    <button class="tab" type="button" data-tab="income" role="tab">💼 Доходы</button>
+    <button class="tab" type="button" data-tab="expenses" role="tab">🧾 Расходы</button>
+    <button class="tab" type="button" data-tab="savings" role="tab">🌱 Сбережения</button>
+    <button class="tab" type="button" data-tab="bills" role="tab">📅 Платежи</button>
+    <button class="tab" type="button" data-tab="analytics" role="tab">📊 Аналитика</button>
+  </div>
 
-  <nav class="quicknav">
-    <a class="chip" href="#sec-income">Доходы</a>
-    <a class="chip" href="#sec-fixed">Постоянные расходы</a>
-    <a class="chip" href="#sec-variable">Переменные расходы</a>
-    <a class="chip" href="#sec-savings">Сбережения</a>
-    <a class="chip" href="#sec-bills">Платежи</a>
-    <a class="chip" href="#sec-chart">Структура трат</a>
-    <a class="chip" href="#sec-trend">История по месяцам</a>
-  </nav>
-
-  <section class="block" id="sec-income">
-    <div class="block-head">
-      <h2>💼 Доход</h2>
-      <div class="totals">цель <b data-total="plan">0 ₽</b> · факт <b data-total="fact">0 ₽</b></div>
-    </div>
-    <div id="rows-income"></div>
-    <button class="add-row" data-add="income">+ добавить источник</button>
-  </section>
-
-  <div class="split">
-    <section class="block" id="sec-fixed">
+  <div class="tab-panel" data-tab="income">
+    <section class="block" id="sec-income">
       <div class="block-head">
-        <h2>🏠 Постоянные расходы</h2>
+        <h2>💼 Доход</h2>
         <div class="totals">цель <b data-total="plan">0 ₽</b> · факт <b data-total="fact">0 ₽</b></div>
       </div>
-      <div id="rows-fixed"></div>
-      <button class="add-row" data-add="fixed">+ добавить статью</button>
-    </section>
-
-    <section class="block" id="sec-variable">
-      <div class="block-head">
-        <h2>🛒 Переменные расходы</h2>
-        <div class="totals">итого <b data-total="fact">0 ₽</b></div>
-      </div>
-      <div id="rows-variable"></div>
-      <button class="add-row" data-add="variable">+ добавить категорию</button>
+      <div id="rows-income"></div>
+      <button class="add-row" data-add="income">+ добавить источник</button>
     </section>
   </div>
 
-  <section class="block" id="sec-savings">
-    <div class="block-head">
-      <h2>🌱 Сбережения</h2>
-      <div class="totals">цель <b data-total="plan">0 ₽</b> · факт <b data-total="fact">0 ₽</b></div>
+  <div class="tab-panel" data-tab="expenses">
+    <div class="split">
+      <section class="block" id="sec-fixed">
+        <div class="block-head">
+          <h2>🏠 Постоянные расходы</h2>
+          <div class="totals">цель <b data-total="plan">0 ₽</b> · факт <b data-total="fact">0 ₽</b></div>
+        </div>
+        <div id="rows-fixed"></div>
+        <button class="add-row" data-add="fixed">+ добавить статью</button>
+      </section>
+
+      <section class="block" id="sec-variable">
+        <div class="block-head">
+          <h2>🛒 Переменные расходы</h2>
+          <div class="totals">итого <b data-total="fact">0 ₽</b></div>
+        </div>
+        <div id="rows-variable"></div>
+        <button class="add-row" data-add="variable">+ добавить категорию</button>
+      </section>
     </div>
-    <div id="rows-savings"></div>
-    <button class="add-row" data-add="savings">+ добавить цель</button>
-  </section>
+  </div>
 
-  <section class="block" id="sec-bills">
-    <div class="block-head"><h2>🧾 Оплатить в этом месяце</h2></div>
-    <ul class="bills" id="billsList"></ul>
-    <button class="add-row" data-add="bill">+ добавить платёж</button>
-  </section>
+  <div class="tab-panel" data-tab="savings">
+    <section class="block" id="sec-savings">
+      <div class="block-head">
+        <h2>🌱 Сбережения</h2>
+        <div class="totals">цель <b data-total="plan">0 ₽</b> · факт <b data-total="fact">0 ₽</b></div>
+      </div>
+      <div id="rows-savings"></div>
+      <button class="add-row" data-add="savings">+ добавить цель</button>
+    </section>
+  </div>
 
-  <section class="block" id="sec-chart">
-    <div class="block-head"><h2>📊 Структура расходов <span style="font-size:12px; color:var(--ink-soft); font-family:Inter,sans-serif; font-weight:400;">по факту</span></h2></div>
-    <div class="chart-wrap">
-      <div id="chartHolder"></div>
-      <div class="legend" id="chartLegend"></div>
-    </div>
-  </section>
+  <div class="tab-panel" data-tab="bills">
+    <section class="block" id="sec-bills">
+      <div class="block-head"><h2>🧾 Оплатить в этом месяце</h2></div>
+      <ul class="bills" id="billsList"></ul>
+      <button class="add-row" data-add="bill">+ добавить платёж</button>
+    </section>
+  </div>
 
-  <section class="block" id="sec-trend">
-    <div class="block-head"><h2>📈 История по месяцам <span style="font-size:12px; color:var(--ink-soft); font-family:Inter,sans-serif; font-weight:400;">факт</span></h2></div>
-    <div class="trend-scroll"><div id="trendHolder"></div></div>
-    <div class="legend" id="trendLegend"></div>
-    <div class="gauge-sub" id="trendNote" style="margin-top:6px;"></div>
-  </section>
+  <div class="tab-panel" data-tab="analytics">
+    <section class="block" id="sec-chart">
+      <div class="block-head"><h2>📊 Структура расходов <span style="font-size:12px; color:var(--ink-soft); font-family:Inter,sans-serif; font-weight:400;">по факту</span></h2></div>
+      <div class="chart-wrap">
+        <div id="chartHolder"></div>
+        <div class="legend" id="chartLegend"></div>
+      </div>
+    </section>
+
+    <section class="block" id="sec-trend">
+      <div class="block-head"><h2>📈 История по месяцам <span style="font-size:12px; color:var(--ink-soft); font-family:Inter,sans-serif; font-weight:400;">факт</span></h2></div>
+      <div class="trend-scroll"><div id="trendHolder"></div></div>
+      <div class="legend" id="trendLegend"></div>
+      <div class="gauge-sub" id="trendNote" style="margin-top:6px;"></div>
+    </section>
+  </div>
 
   <footer>
-    Данные хранятся только в этом браузере на этом устройстве — очистка истории посещений их не трогает, а вот очистка «куки и данных сайтов» сотрёт всё безвозвратно. Кнопка ⬇ наверху сохраняет резервную копию всех месяцев в файл, ⬆ — загружает её обратно. «Итоги месяца» наверху — только чтение, они считаются по тому, что вы впишете в разделах ниже. «Цель» — необязательный ориентир для сравнения.
+    Данные хранятся только в этом браузере на этом устройстве — очистка истории посещений их не трогает, а вот очистка «куки и данных сайтов» сотрёт всё безвозвратно. Кнопка ⬇ наверху сохраняет резервную копию всех месяцев в файл, ⬆ — загружает её обратно. «Итоги месяца» наверху — только чтение, они считаются по тому, что вы впишете на вкладках ниже. «Цель» — необязательный ориентир для сравнения.
   </footer>
 </div>
 
@@ -1032,6 +1039,34 @@
     renderChart();
     renderGauge(sectionTotalsOf('income').fact, sectionTotalsOf('savings').fact);
   });
+
+  // ---------- tabs ----------
+  var TAB_KEY = 'budget_active_tab_v1';
+  var tabButtons = document.querySelectorAll('.tab');
+  var tabPanels = document.querySelectorAll('.tab-panel');
+  function setActiveTab(tab){
+    var found = false;
+    tabPanels.forEach(function(panel){
+      var isMatch = panel.getAttribute('data-tab') === tab;
+      panel.classList.toggle('active', isMatch);
+      if(isMatch) found = true;
+    });
+    if(!found){ tab = 'income'; tabPanels.forEach(function(panel){ panel.classList.toggle('active', panel.getAttribute('data-tab') === 'income'); }); }
+    tabButtons.forEach(function(btn){
+      var isMatch = btn.getAttribute('data-tab') === tab;
+      btn.classList.toggle('active', isMatch);
+      btn.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+    });
+    try{ localStorage.setItem(TAB_KEY, tab); }catch(e){}
+  }
+  tabButtons.forEach(function(btn){
+    btn.addEventListener('click', function(){ setActiveTab(btn.getAttribute('data-tab')); });
+  });
+  (function initTab(){
+    var saved = null;
+    try{ saved = localStorage.getItem(TAB_KEY); }catch(e){}
+    setActiveTab(saved || 'income');
+  })();
 
   function monthTitleText(monthKey){
     var parts = monthKey.split('-');

@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Отложка</title>
+<script>
+(function(){
+  try{
+    var saved = localStorage.getItem('budget_theme_v1');
+    var theme = saved || ((window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  }catch(e){}
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F2EA;
+    --bg-card:#FFFFFF;
+    --bg-muted:#ECE6D6;
+    --ink:#1C2118;
+    --ink-soft:#5E6656;
+    --line:#DCD5C1;
+    --line-soft:#EAE4D2;
+    --primary:#1F6F4A;
+    --primary-soft:#E1F0E6;
+    --gold:#93741F;
+    --gold-soft:#F2E9D2;
+    --danger:#A5432A;
+    --danger-soft:#F5E2D8;
+    --radius-card:14px;
+    --radius-field:8px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12140F;
+      --bg-card:#1B1F17;
+      --bg-muted:#20261B;
+      --ink:#EDE9DB;
+      --ink-soft:#9BA38C;
+      --line:#333A2B;
+      --line-soft:#262C20;
+      --primary:#63C08F;
+      --primary-soft:#1D2B21;
+      --gold:#D9B563;
+      --gold-soft:#302915;
+      --danger:#E28A66;
+      --danger-soft:#332019;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12140F;
+    --bg-card:#1B1F17;
+    --bg-muted:#20261B;
+    --ink:#EDE9DB;
+    --ink-soft:#9BA38C;
+    --line:#333A2B;
+    --line-soft:#262C20;
+    --primary:#63C08F;
+    --primary-soft:#1D2B21;
+    --gold:#D9B563;
+    --gold-soft:#302915;
+    --danger:#E28A66;
+    --danger-soft:#332019;
+  }
+
+  *{box-sizing:border-box;}
+  html{
+    scroll-behavior:smooth;
+    scroll-padding-top: calc(env(safe-area-inset-top,0px) + 14px);
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{transition:none !important;}
+  }
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    padding-top: env(safe-area-inset-top,0px);
+    padding-bottom: env(safe-area-inset-bottom,0px);
+    -webkit-font-smoothing:antialiased;
+  }
+  .num{font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums;}
+  h1,h2,h3{font-family:'Source Serif 4',serif; margin:0; font-weight:600;}
+  button, input{font-family:inherit; color:inherit;}
+  a{color:inherit;}
+  :focus-visible{outline:2px solid var(--primary); outline-offset:2px;}
+
+  .wrap{max-width:980px; margin:0 auto; padding:22px 18px 90px;}
+
+  /* ---------- header ---------- */
+  header.cover{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    flex-wrap:wrap; gap:16px;
+    padding-bottom:18px; margin-bottom:20px;
+    border-bottom:1px solid var(--line);
+  }
+  header.cover .title h1{font-size:clamp(24px,4vw,32px); letter-spacing:-0.01em;}
+  header.cover .title p{margin:4px 0 0; color:var(--ink-soft); font-size:14px; max-width:440px;}
+  .controls{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .controls input[type=month]{
+    font-family:'IBM Plex Mono',monospace; font-size:13px;
+    border:1px solid var(--line); background:var(--bg-card); color:var(--ink);
+    padding:8px 10px; border-radius:var(--radius-field);
+  }
+  .icon-btn{
+    border:1px solid var(--line); background:var(--bg-card); color:var(--ink-soft);
+    width:36px; height:36px; border-radius:var(--radius-field);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:16px; line-height:1;
+  }
+  .icon-btn:hover{color:var(--ink); border-color:var(--ink-soft);}
+
+  /* ---------- summary panel (read-only) ---------- */
+  .summary-panel{
+    background:var(--bg-muted); border:1px solid var(--line); border-radius:var(--radius-card);
+    padding:16px 18px 2px; margin:2px 0 6px; cursor:default;
+  }
+  .summary-eyebrow{
+    font-size:12px; color:var(--ink-soft); letter-spacing:.01em;
+    display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:14px;
+  }
+  .summary-eyebrow span{font-weight:400; opacity:.85;}
+
+  /* ---------- hero: gauge + tiles ---------- */
+  .hero{
+    display:grid; grid-template-columns:220px 1fr;
+    gap:16px; margin-bottom:14px;
+  }
+  @media (max-width:640px){ .hero{grid-template-columns:1fr;} }
+
+  .gauge-card{
+    background:var(--bg-card); border:1px solid var(--line); border-radius:var(--radius-card);
+    padding:18px; display:flex; flex-direction:column; align-items:center; text-align:center; justify-content:center;
+  }
+  .gauge-card .gauge-label{font-size:12px; color:var(--ink-soft); letter-spacing:.02em; margin-bottom:6px;}
+  .gauge-card .gauge-sub{font-size:12px; color:var(--ink-soft); margin-top:6px; line-height:1.4;}
+  .gauge-pct{font-family:'Source Serif 4',serif; font-weight:700; font-size:26px;}
+  .summary-panel .gauge-card{
+    background:transparent; border:none; border-radius:0; padding:0 18px 0 0; border-right:1px solid var(--line);
+  }
+  @media (max-width:640px){
+    .summary-panel .gauge-card{ border-right:none; border-bottom:1px solid var(--line); padding:0 0 14px; margin-bottom:14px; }
+  }
+
+  .tiles{display:grid; grid-template-columns:repeat(3,1fr); gap:12px;}
+  @media (max-width:520px){ .tiles{grid-template-columns:1fr;} }
+  .tile{
+    background:var(--bg-card); border:1px solid var(--line); border-radius:var(--radius-card);
+    padding:16px;
+  }
+  .tile .label{font-size:12px; color:var(--ink-soft); letter-spacing:.02em; display:flex; align-items:center; gap:6px;}
+  .tile .amount{font-size:22px; margin-top:6px; font-weight:600;}
+  .tile .sub{margin-top:8px; font-size:13px; color:var(--ink-soft);}
+  .summary-panel .tile{
+    background:transparent; border:none; border-radius:0; padding:0 16px; border-right:1px solid var(--line);
+  }
+  .summary-panel .tile:last-child{border-right:none;}
+  @media (max-width:520px){
+    .summary-panel .tile{ border-right:none; border-bottom:1px solid var(--line); padding:10px 0; }
+    .summary-panel .tile:last-child{border-bottom:none;}
+  }
+
+  .headline-balance{
+    background:var(--bg-muted); border:1px solid var(--line); border-radius:var(--radius-card);
+    padding:14px 18px; display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px;
+    margin-bottom:22px;
+  }
+  .headline-balance .label{font-size:13px; color:var(--ink-soft);}
+  .headline-balance .amount{font-size:24px; font-weight:600;}
+  .summary-panel .headline-balance{
+    background:transparent; border:none; border-top:1px solid var(--line); border-radius:0;
+    padding:14px 0; margin:2px 0 0;
+  }
+
+  .scroll-cue{
+    display:block; text-align:center; color:var(--ink-soft); font-size:13px;
+    text-decoration:none; margin:0 0 20px; padding:2px;
+  }
+  .scroll-cue:hover{color:var(--primary);}
+
+  /* ---------- quick nav ---------- */
+  .quicknav{
+    display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:28px;
+    -ms-overflow-style:none; scrollbar-width:thin;
+  }
+  .chip{
+    border:1px solid var(--line); background:var(--bg-card); color:var(--ink-soft);
+    padding:7px 13px; border-radius:999px; font-size:13px; text-decoration:none; white-space:nowrap; flex:none;
+  }
+  .chip:hover{color:var(--ink); border-color:var(--primary);}
+
+  /* ---------- sections ---------- */
+  section.block{
+    margin-bottom:30px; scroll-margin-top:16px;
+    background:var(--bg-card); border:1px solid var(--line); border-radius:var(--radius-card);
+    padding:18px 18px 14px;
+  }
+  .block-head{
+    display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px;
+    padding-bottom:12px; margin-bottom:6px; border-bottom:1px solid var(--line-soft);
+  }
+  .block-head h2{font-size:18px; display:flex; align-items:center; gap:8px;}
+  .block-head .totals{font-size:12px; color:var(--ink-soft);}
+  .block-head .totals b{color:var(--ink); font-weight:600; font-family:'IBM Plex Mono',monospace;}
+
+  .item-row{
+    display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px;
+    padding:11px 2px; border-bottom:1px solid var(--line-soft);
+  }
+  .item-row:last-of-type{border-bottom:none;}
+  .item-row .icon{font-size:17px; flex:none; width:22px; text-align:center;}
+  .item-row .name-field{flex:1 1 150px; min-width:130px;}
+  .item-row .name-field input{
+    border:none; background:transparent; color:var(--ink); font-size:14px; width:100%;
+    padding:4px 2px; font-family:'Inter',sans-serif;
+  }
+  .item-row .name-field input:focus{outline:none; border-bottom:1px solid var(--ink-soft);}
+  .num-field{display:flex; flex-direction:column; gap:2px; width:96px; flex:0 0 auto;}
+  .num-field label{font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft);}
+  .num-field input{
+    border:none; border-bottom:1px solid var(--line); background:transparent; color:var(--ink);
+    font-size:14px; padding:3px 2px; width:100%; font-family:'IBM Plex Mono',monospace;
+  }
+  .num-field input:focus{outline:none; border-bottom:1px solid var(--primary);}
+  .progress-block{flex:1 1 140px; min-width:120px;}
+  .progress-track{height:6px; border-radius:99px; background:var(--line-soft); overflow:hidden;}
+  .progress-fill{height:100%; border-radius:99px; transition:width .25s ease, background-color .25s ease; background:var(--ink-soft);}
+  .progress-label{margin-top:5px; font-size:12px; text-align:right;}
+  .del-btn{
+    border:none; background:transparent; color:var(--ink-soft); cursor:pointer;
+    font-size:16px; line-height:1; padding:4px; flex:none;
+  }
+  .del-btn:hover{color:var(--danger);}
+
+  .add-row{
+    margin-top:10px; background:none; border:1px dashed var(--line); color:var(--ink-soft);
+    font-size:13px; padding:8px 14px; border-radius:999px; cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .add-row:hover{border-color:var(--primary); color:var(--primary);}
+
+  .split{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  @media (max-width:760px){ .split{grid-template-columns:1fr;} }
+  .split section.block{margin-bottom:0;}
+
+  /* ---------- bills ---------- */
+  .bills{list-style:none; margin:0; padding:0;}
+  .bill-row{
+    display:flex; flex-wrap:wrap; align-items:center; gap:10px;
+    padding:10px 2px; border-bottom:1px solid var(--line-soft);
+  }
+  .bill-row:last-child{border-bottom:none;}
+  .bill-row.paid .bname, .bill-row.paid .bamount{color:var(--ink-soft); text-decoration:line-through;}
+  .bill-row input[type=checkbox]{width:17px; height:17px; accent-color:var(--primary); flex:none;}
+  .bill-row .bicon{font-size:16px; flex:none;}
+  .bill-row .bname{border:none; background:transparent; color:var(--ink); font-size:14px; flex:1 1 140px; min-width:110px; padding:4px 2px;}
+  .bill-row .bamount{border:none; border-bottom:1px solid var(--line); background:transparent; color:var(--ink); font-family:'IBM Plex Mono',monospace; text-align:right; width:92px; padding:3px 2px; flex:none;}
+  .bill-row .bdate{border:none; border-bottom:1px solid var(--line); background:transparent; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; font-size:12px; width:130px; padding:3px 2px; flex:none;}
+  .empty-note{color:var(--ink-soft); font-size:13px; font-style:italic; padding:6px 2px;}
+
+  /* ---------- chart ---------- */
+  .chart-wrap{display:flex; gap:26px; align-items:center; flex-wrap:wrap;}
+  .trend-scroll{overflow-x:auto; padding-bottom:4px;}
+  .trend-scroll svg{display:block;}
+  .legend{flex:1; min-width:220px;}
+  .legend .item{display:flex; align-items:center; gap:8px; font-size:13px; padding:4px 0;}
+  .legend .swatch{width:10px; height:10px; border-radius:3px; flex:none;}
+  .legend .amt{margin-left:auto; color:var(--ink-soft);}
+
+  footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--ink-soft);}
+
+  @media (max-width:460px){
+    .num-field{width:78px;}
+    .bill-row .bamount{width:76px;}
+    .bill-row .bdate{width:110px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="title">
+      <h1 id="monthTitle">Отложка</h1>
+      <p>Учёт доходов, расходов и сбережений — с прицелом на то, сколько удаётся откладывать.</p>
+    </div>
+    <div class="controls">
+      <input type="month" id="monthPicker">
+      <button class="icon-btn" id="themeToggle" title="Сменить тему" aria-label="Сменить тему"></button>
+      <button class="icon-btn" id="exportBtn" title="Скачать резервную копию всех месяцев" aria-label="Скачать резервную копию">⬇</button>
+      <button class="icon-btn" id="importBtn" title="Загрузить резервную копию" aria-label="Загрузить резервную копию">⬆</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none;">
+      <button class="icon-btn" id="resetBtn" title="Очистить текущий месяц" aria-label="Очистить текущий месяц">↺</button>
+    </div>
+  </header>
+
+  <section id="sec-summary" class="summary-panel">
+    <div class="summary-eyebrow">👁 Итоги месяца <span>— только для чтения, пересчитываются сами по данным ниже</span></div>
+
+    <div class="hero">
+      <div class="gauge-card">
+        <div class="gauge-label">Норма сбережений</div>
+        <svg id="gaugeSvg" width="120" height="120" viewBox="0 0 120 120"></svg>
+        <div class="gauge-sub" id="gaugeSub">Впишите доход и сбережения</div>
+      </div>
+      <div class="tiles">
+        <div class="tile">
+          <div class="label">💼 Доходы</div>
+          <div class="amount num" id="sumIncomeFact">0 ₽</div>
+          <div class="sub num" id="sumIncomeSub">0 ₽ из 0 ₽</div>
+        </div>
+        <div class="tile">
+          <div class="label">🧾 Расходы</div>
+          <div class="amount num" id="sumExpenseFact">0 ₽</div>
+          <div class="sub num" id="sumExpenseSub">0 ₽ из 0 ₽</div>
+        </div>
+        <div class="tile">
+          <div class="label">🌱 Сбережения</div>
+          <div class="amount num" id="sumSavingsFact">0 ₽</div>
+          <div class="sub num" id="sumSavingsSub">0 ₽ из 0 ₽</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="headline-balance">
+      <div class="label">Свободный остаток (доходы − расходы − сбережения)</div>
+      <div class="amount num" id="freeBalance">0 ₽</div>
+    </div>
+  </section>
+
+  <a class="scroll-cue" href="#sec-income">↓ Заполняйте цифры в разделах ниже</a>
+
+  <nav class="quicknav">
+    <a class="chip" href="#sec-income">Доходы</a>
+    <a class="chip" href="#sec-fixed">Постоянные расходы</a>
+    <a class="chip" href="#sec-variable">Переменные расходы</a>
+    <a class="chip" href="#sec-savings">Сбережения</a>
+    <a class="chip" href="#sec-bills">Платежи</a>
+    <a class="chip" href="#sec-chart">Структура трат</a>
+    <a class="chip" href="#sec-trend">История по месяцам</a>
+  </nav>
+
+  <section class="block" id="sec-income">
+    <div class="block-head">
+      <h2>💼 Доход</h2>
+      <div class="totals">цель <b data-total="plan">0 ₽</b> · факт <b data-total="fact">0 ₽</b></div>
+    </div>
+    <div id="rows-income"></div>
+    <button class="add-row" data-add="income">+ добавить источник</button>
+  </section>
+
+  <div class="split">
+    <section class="block" id="sec-fixed">
+      <div class="block-head">
+        <h2>🏠 Постоянные расходы</h2>
+        <div class="totals">цель <b data-total="plan">0 ₽</b> · факт <b data-total="fact">0 ₽</b></div>
+      </div>
+      <div id="rows-fixed"></div>
+      <button class="add-row" data-add="fixed">+ добавить статью</button>
+    </section>
+
+    <section class="block" id="sec-variable">
+      <div class="block-head">
+        <h2>🛒 Переменные расходы</h2>
+        <div class="totals">итого <b data-total="fact">0 ₽</b></div>
+      </div>
+      <div id="rows-variable"></div>
+      <button class="add-row" data-add="variable">+ добавить категорию</button>
+    </section>
+  </div>
+
+  <section class="block" id="sec-savings">
+    <div class="block-head">
+      <h2>🌱 Сбережения</h2>
+      <div class="totals">цель <b data-total="plan">0 ₽</b> · факт <b data-total="fact">0 ₽</b></div>
+    </div>
+    <div id="rows-savings"></div>
+    <button class="add-row" data-add="savings">+ добавить цель</button>
+  </section>
+
+  <section class="block" id="sec-bills">
+    <div class="block-head"><h2>🧾 Оплатить в этом месяце</h2></div>
+    <ul class="bills" id="billsList"></ul>
+    <button class="add-row" data-add="bill">+ добавить платёж</button>
+  </section>
+
+  <section class="block" id="sec-chart">
+    <div class="block-head"><h2>📊 Структура расходов <span style="font-size:12px; color:var(--ink-soft); font-family:Inter,sans-serif; font-weight:400;">по факту</span></h2></div>
+    <div class="chart-wrap">
+      <div id="chartHolder"></div>
+      <div class="legend" id="chartLegend"></div>
+    </div>
+  </section>
+
+  <section class="block" id="sec-trend">
+    <div class="block-head"><h2>📈 История по месяцам <span style="font-size:12px; color:var(--ink-soft); font-family:Inter,sans-serif; font-weight:400;">факт</span></h2></div>
+    <div class="trend-scroll"><div id="trendHolder"></div></div>
+    <div class="legend" id="trendLegend"></div>
+    <div class="gauge-sub" id="trendNote" style="margin-top:6px;"></div>
+  </section>
+
+  <footer>
+    Данные хранятся только в этом браузере на этом устройстве — очистка истории посещений их не трогает, а вот очистка «куки и данных сайтов» сотрёт всё безвозвратно. Кнопка ⬇ наверху сохраняет резервную копию всех месяцев в файл, ⬆ — загружает её обратно. «Итоги месяца» наверху — только чтение, они считаются по тому, что вы впишете в разделах ниже. «Цель» — необязательный ориентир для сравнения.
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_PREFIX = "budget_v1_";
+  var MONTHS_INDEX_KEY = "budget_v1_months_index";
+  var THEME_KEY = "budget_theme_v1";
+
+  var RU_MONTHS = ["январь","февраль","март","апрель","май","июнь","июль","август","сентябрь","октябрь","ноябрь","декабрь"];
+
+  // ---------- category icon guesser ----------
+  var ICON_RULES = [
+    ["зарплат","💼"], ["бонус","🎁"], ["фриланс","🧑‍💻"], ["подработ","🛠️"], ["авито","🛠️"], ["источник","💵"],
+    ["ипотек","🏠"], ["аренд","🏠"], ["коммунал","💡"], ["интернет","📶"], ["телефон","📶"], ["страховк","🛡️"], ["кредит","🏦"],
+    ["продукт","🛒"], ["здоровь","💊"], ["транспорт","🚌"], ["машин","🚗"], ["авто","🚗"], ["налог","📄"], ["кафе","☕"], ["рестора","☕"],
+    ["шоппинг","🛍️"], ["одежд","🛍️"], ["красот","💅"], ["развлеч","🎬"], ["спорт","🏋️"], ["фитнес","🏋️"], ["подписк","🔁"],
+    ["образован","🎓"], ["учеб","🎓"], ["путешеств","✈️"], ["отпуск","🌴"], ["благотворит","❤️"], ["подарк","🎀"],
+    ["непредвиден","⚠️"], ["подушк","🛟"], ["сбережен","🌱"], ["накоплен","🌱"], ["конверт","✉️"], ["инвест","📈"], ["дом","🧹"], ["разное","🔹"]
+  ];
+  function pickIcon(name){
+    var n = (name || '').toLowerCase();
+    for(var i=0;i<ICON_RULES.length;i++){ if(n.indexOf(ICON_RULES[i][0]) > -1) return ICON_RULES[i][1]; }
+    return "💠";
+  }
+
+  function defaultState(){
+    return {
+      income: [ mk("Зарплата"), mk("Бонус"), mk("Фриланс"), mk("Подработка") ],
+      fixed: [ mk("Ипотека/аренда"), mk("Коммуналка"), mk("Интернет/телефон"), mk("Страховка"), mk("Кредит") ],
+      variable: [
+        mk("Продукты"), mk("Здоровье"), mk("Транспорт"), mk("Машина"), mk("Дом"),
+        mk("Налоги"), mk("Кафе"), mk("Шоппинг"), mk("Красота"), mk("Развлечения"),
+        mk("Спорт"), mk("Подписки"), mk("Образование"), mk("Путешествия"),
+        mk("Благотворительность"), mk("Подарки"), mk("Непредвиденное"), mk("Разное")
+      ],
+      savings: [ mk("Финансовая подушка"), mk("Отпуск"), mk("Налоги") ],
+      bills: [ mb("Ипотека"), mb("Коммуналка") ]
+    };
+  }
+  var uidCounter = 1;
+  function uid(){ return "r" + (uidCounter++) + "_" + Date.now().toString(36); }
+  function mk(name){ return {id: uid(), name: name, plan: 0, fact: 0}; }
+  function mb(name){ return {id: uid(), name: name, amount: 0, date: "", paid: false}; }
+
+  var state = null;
+  var currentMonthKey = "";
+
+  function storageKey(monthKey){ return STORAGE_PREFIX + monthKey; }
+
+  function loadIndex(){
+    try{ var raw = localStorage.getItem(MONTHS_INDEX_KEY); return raw ? JSON.parse(raw) : []; }catch(e){ return []; }
+  }
+  function saveIndex(list){ try{ localStorage.setItem(MONTHS_INDEX_KEY, JSON.stringify(list)); }catch(e){} }
+  function rememberMonth(monthKey){
+    var list = loadIndex();
+    if(list.indexOf(monthKey) === -1){ list.push(monthKey); saveIndex(list); }
+  }
+
+  function loadState(monthKey){
+    try{
+      var raw = localStorage.getItem(storageKey(monthKey));
+      if(raw){
+        var parsed = JSON.parse(raw);
+        ["income","fixed","variable","savings","bills"].forEach(function(k){
+          if(!Array.isArray(parsed[k])) parsed[k] = [];
+        });
+        return parsed;
+      }
+    }catch(e){}
+    return defaultState();
+  }
+  function persist(){
+    try{
+      localStorage.setItem(storageKey(currentMonthKey), JSON.stringify(state));
+      rememberMonth(currentMonthKey);
+    }catch(e){ console.error("Не удалось сохранить данные локально", e); }
+  }
+
+  function num(v){ var n = parseFloat(v); return isFinite(n) ? n : 0; }
+  var fmt = new Intl.NumberFormat('ru-RU', {maximumFractionDigits: 0});
+  function money(v){
+    var sign = v < 0 ? "−" : "";
+    return sign + fmt.format(Math.abs(Math.round(v))) + " ₽";
+  }
+
+  function sectionTotalsOf(sectionKey){
+    var plan = 0, fact = 0;
+    state[sectionKey].forEach(function(row){ plan += num(row.plan); fact += num(row.fact); });
+    return {plan: plan, fact: fact};
+  }
+
+  // "spend" sections: over-plan is bad. "accumulate" sections: reaching/exceeding plan is good.
+  var SECTION_KIND = { income:'accumulate', fixed:'spend', variable:'spend', savings:'accumulate' };
+
+  function progressColor(kind, plan, fact){
+    if(plan <= 0 && fact <= 0) return null;
+    if(kind === 'spend'){
+      if(plan <= 0) return 'var(--ink-soft)';
+      return fact > plan ? 'var(--danger)' : 'var(--primary)';
+    }
+    if(plan <= 0) return 'var(--ink-soft)';
+    return fact >= plan ? 'var(--primary)' : 'var(--gold)';
+  }
+
+  function renderRow(sectionKey, row){
+    var kind = SECTION_KIND[sectionKey];
+    var isVariable = sectionKey === 'variable';
+    var wrap = document.createElement('div');
+    wrap.className = 'item-row';
+
+    var icon = document.createElement('span');
+    icon.className = 'icon';
+    icon.textContent = pickIcon(row.name);
+
+    var nameField = document.createElement('div');
+    nameField.className = 'name-field';
+    var inName = document.createElement('input');
+    inName.type = 'text'; inName.value = row.name; inName.placeholder = 'Название';
+    inName.addEventListener('input', function(){
+      row.name = inName.value; persist();
+      icon.textContent = pickIcon(row.name);
+    });
+    nameField.appendChild(inName);
+
+    var delBtn = document.createElement('button');
+    delBtn.className = 'del-btn'; delBtn.textContent = '×'; delBtn.title = 'Удалить строку'; delBtn.setAttribute('aria-label','Удалить строку');
+    delBtn.addEventListener('click', function(){
+      state[sectionKey] = state[sectionKey].filter(function(r){ return r.id !== row.id; });
+      persist(); renderSection(sectionKey); updateSummary();
+    });
+
+    if(isVariable){
+      // No target here — variable spending isn't meant to be predicted, just recorded.
+      var amountField = document.createElement('div'); amountField.className = 'num-field';
+      var amountLabel = document.createElement('label'); amountLabel.textContent = 'Сумма';
+      var inAmount = document.createElement('input');
+      inAmount.type = 'number'; inAmount.inputMode = 'decimal'; inAmount.value = row.fact || ''; inAmount.placeholder = '0';
+      inAmount.addEventListener('input', function(){
+        row.fact = num(inAmount.value); persist();
+        updateSectionTotals(sectionKey); updateSummary();
+      });
+      amountField.appendChild(amountLabel); amountField.appendChild(inAmount);
+
+      wrap.appendChild(icon); wrap.appendChild(nameField); wrap.appendChild(amountField); wrap.appendChild(delBtn);
+      return wrap;
+    }
+
+    var planField = document.createElement('div'); planField.className = 'num-field';
+    var planLabel = document.createElement('label'); planLabel.textContent = 'Цель';
+    var inPlan = document.createElement('input');
+    inPlan.type = 'number'; inPlan.inputMode = 'decimal'; inPlan.value = row.plan || ''; inPlan.placeholder = '0';
+    planField.appendChild(planLabel); planField.appendChild(inPlan);
+
+    var factField = document.createElement('div'); factField.className = 'num-field';
+    var factLabel = document.createElement('label'); factLabel.textContent = 'Факт';
+    var inFact = document.createElement('input');
+    inFact.type = 'number'; inFact.inputMode = 'decimal'; inFact.value = row.fact || ''; inFact.placeholder = '0';
+    factField.appendChild(factLabel); factField.appendChild(inFact);
+
+    var progressBlock = document.createElement('div'); progressBlock.className = 'progress-block';
+    var track = document.createElement('div'); track.className = 'progress-track';
+    var fill = document.createElement('div'); fill.className = 'progress-fill';
+    track.appendChild(fill);
+    var progLabel = document.createElement('div'); progLabel.className = 'progress-label num';
+    progressBlock.appendChild(track); progressBlock.appendChild(progLabel);
+
+    function refreshRowVisuals(){
+      var plan = num(row.plan), fact = num(row.fact);
+      if(plan <= 0 && fact <= 0){
+        fill.style.width = '4%'; fill.style.background = 'var(--line-soft)';
+        progLabel.textContent = '—';
+        progLabel.style.color = 'var(--ink-soft)';
+      } else if(plan <= 0){
+        // No goal set for this row — just show what's actually there, no comparison.
+        fill.style.width = '100%'; fill.style.background = 'var(--ink-soft)';
+        progLabel.textContent = money(fact);
+        progLabel.style.color = 'var(--ink-soft)';
+      } else {
+        var pct = fact/plan*100;
+        var color = progressColor(kind, plan, fact);
+        fill.style.width = Math.max(4, Math.min(100,pct)) + '%';
+        fill.style.background = color;
+        progLabel.textContent = money(fact) + ' из ' + money(plan) + ' (' + Math.round(pct) + '%)';
+        progLabel.style.color = color;
+      }
+      updateSectionTotals(sectionKey);
+      updateSummary();
+    }
+
+    inPlan.addEventListener('input', function(){ row.plan = num(inPlan.value); persist(); refreshRowVisuals(); });
+    inFact.addEventListener('input', function(){ row.fact = num(inFact.value); persist(); refreshRowVisuals(); });
+
+    wrap.appendChild(icon); wrap.appendChild(nameField); wrap.appendChild(planField);
+    wrap.appendChild(factField); wrap.appendChild(progressBlock); wrap.appendChild(delBtn);
+
+    row._refresh = refreshRowVisuals;
+    refreshRowVisuals();
+    return wrap;
+  }
+
+  function renderSection(sectionKey){
+    var holder = document.getElementById('rows-' + sectionKey);
+    holder.innerHTML = '';
+    state[sectionKey].forEach(function(row){ holder.appendChild(renderRow(sectionKey, row)); });
+    updateSectionTotals(sectionKey);
+  }
+
+  function updateSectionTotals(sectionKey){
+    var totals = sectionTotalsOf(sectionKey);
+    var section = document.getElementById('sec-' + sectionKey);
+    if(!section) return;
+    var planEl = section.querySelector('[data-total="plan"]');
+    if(planEl) planEl.textContent = money(totals.plan);
+    section.querySelector('[data-total="fact"]').textContent = money(totals.fact);
+    return totals;
+  }
+
+  function renderBills(){
+    var ul = document.getElementById('billsList');
+    ul.innerHTML = '';
+    if(state.bills.length === 0){
+      var empty = document.createElement('div');
+      empty.className = 'empty-note'; empty.textContent = 'Платежей пока нет';
+      ul.appendChild(empty);
+    }
+    state.bills
+      .slice()
+      .sort(function(a,b){ return (a.date||"9999-99-99").localeCompare(b.date||"9999-99-99"); })
+      .forEach(function(bill){
+        var li = document.createElement('li');
+        li.className = 'bill-row' + (bill.paid ? ' paid' : '');
+
+        var icon = document.createElement('span'); icon.className = 'bicon'; icon.textContent = '🧾';
+
+        var cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.checked = !!bill.paid;
+        cb.addEventListener('change', function(){ bill.paid = cb.checked; persist(); renderBills(); });
+
+        var inName = document.createElement('input');
+        inName.className = 'bname'; inName.type = 'text'; inName.value = bill.name; inName.placeholder = 'Платёж';
+        inName.addEventListener('input', function(){ bill.name = inName.value; persist(); });
+
+        var inAmount = document.createElement('input');
+        inAmount.className = 'bamount num'; inAmount.type = 'number'; inAmount.inputMode = 'decimal';
+        inAmount.value = bill.amount || ''; inAmount.placeholder = '0';
+        inAmount.addEventListener('input', function(){ bill.amount = num(inAmount.value); persist(); });
+
+        var inDate = document.createElement('input');
+        inDate.className = 'bdate'; inDate.type = 'date'; inDate.value = bill.date || '';
+        inDate.addEventListener('change', function(){ bill.date = inDate.value; persist(); renderBills(); });
+
+        var delBtn = document.createElement('button');
+        delBtn.className = 'del-btn'; delBtn.textContent = '×'; delBtn.title = 'Удалить'; delBtn.setAttribute('aria-label','Удалить платёж');
+        delBtn.addEventListener('click', function(){
+          state.bills = state.bills.filter(function(b){ return b.id !== bill.id; });
+          persist(); renderBills();
+        });
+
+        li.appendChild(icon); li.appendChild(cb); li.appendChild(inName); li.appendChild(inAmount); li.appendChild(inDate); li.appendChild(delBtn);
+        ul.appendChild(li);
+      });
+  }
+
+  var CHART_PALETTE = {
+    light: ['#1F6F4A','#93741F','#3C6E8F','#A5432A','#5A7A3C','#7A5C8E','#B0743A','#4A5A6E'],
+    dark:  ['#63C08F','#D9B563','#6FA8C2','#E28A66','#8FBE6F','#B79BD1','#D2A26E','#8FA3C2']
+  };
+  function currentThemeName(){
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  }
+
+  function renderChart(){
+    var holder = document.getElementById('chartHolder');
+    var legend = document.getElementById('chartLegend');
+    holder.innerHTML = ""; legend.innerHTML = "";
+
+    var combined = state.fixed.concat(state.variable).map(function(r){
+      return {name: r.name || '(без названия)', value: Math.max(0, num(r.fact))};
+    }).filter(function(r){ return r.value > 0; });
+
+    if(combined.length === 0){
+      legend.innerHTML = '<p class="empty-note">Заполните «Факт» в расходах — тогда здесь появится диаграмма.</p>';
+      return;
+    }
+
+    combined.sort(function(a,b){ return b.value - a.value; });
+    var top = combined.slice(0, 8);
+    var restSum = combined.slice(8).reduce(function(s,r){ return s + r.value; }, 0);
+    if(restSum > 0) top.push({name:'Другое', value: restSum});
+
+    var total = top.reduce(function(s,r){ return s + r.value; }, 0);
+    var palette = CHART_PALETTE[currentThemeName()];
+
+    var size = 200, cx = size/2, cy = size/2, r = 84, rInner = 50;
+    var svgNS = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox", "0 0 " + size + " " + size);
+    svg.setAttribute("width", size); svg.setAttribute("height", size);
+
+    var start = -Math.PI/2;
+    top.forEach(function(seg, i){
+      var frac = seg.value / total;
+      var end = start + frac * Math.PI * 2;
+      var path = document.createElementNS(svgNS, "path");
+      var x1 = cx + r*Math.cos(start), y1 = cy + r*Math.sin(start);
+      var x2 = cx + r*Math.cos(end), y2 = cy + r*Math.sin(end);
+      var xi1 = cx + rInner*Math.cos(end), yi1 = cy + rInner*Math.sin(end);
+      var xi2 = cx + rInner*Math.cos(start), yi2 = cy + rInner*Math.sin(start);
+      var large = (end - start) > Math.PI ? 1 : 0;
+      var d = ["M",x1,y1,"A",r,r,0,large,1,x2,y2,"L",xi1,yi1,"A",rInner,rInner,0,large,0,xi2,yi2,"Z"].join(" ");
+      path.setAttribute("d", d);
+      path.setAttribute("fill", palette[i % palette.length]);
+      svg.appendChild(path);
+      start = end;
+
+      var item = document.createElement('div'); item.className = 'item';
+      var sw = document.createElement('span'); sw.className = 'swatch'; sw.style.background = palette[i % palette.length];
+      var nm = document.createElement('span'); nm.textContent = seg.name;
+      var amt = document.createElement('span'); amt.className = 'amt num'; amt.textContent = money(seg.value);
+      item.appendChild(sw); item.appendChild(nm); item.appendChild(amt);
+      legend.appendChild(item);
+    });
+
+    holder.appendChild(svg);
+  }
+
+  // ---------- savings-rate gauge ----------
+  function renderGauge(incFact, savFact){
+    var svg = document.getElementById('gaugeSvg');
+    var sub = document.getElementById('gaugeSub');
+    var size = 120, cx = 60, cy = 60, r = 50, sw = 10;
+    var circumference = 2 * Math.PI * r;
+
+    var rate = incFact > 0 ? (savFact / incFact * 100) : null;
+    var pctForRing = rate === null ? 0 : Math.max(0, Math.min(100, rate));
+    var color = 'var(--ink-soft)';
+    if(rate !== null){
+      color = rate >= 20 ? 'var(--primary)' : (rate >= 5 ? 'var(--gold)' : 'var(--ink-soft)');
+    }
+    var offset = circumference * (1 - pctForRing/100);
+
+    svg.innerHTML =
+      '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="var(--line-soft)" stroke-width="'+sw+'"></circle>' +
+      '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="'+sw+'" ' +
+        'stroke-linecap="round" stroke-dasharray="'+circumference+'" stroke-dashoffset="'+offset+'" ' +
+        'transform="rotate(-90 '+cx+' '+cy+')" style="transition:stroke-dashoffset .3s ease, stroke .3s ease"></circle>' +
+      '<text x="'+cx+'" y="'+(cy+6)+'" text-anchor="middle" font-family="Source Serif 4, serif" font-weight="700" ' +
+        'font-size="22" fill="var(--ink)">' + (rate === null ? '—' : Math.round(rate) + '%') + '</text>';
+
+    if(rate === null){
+      sub.textContent = 'Впишите доход и сбережения';
+    } else if(rate >= 20){
+      sub.textContent = 'Отличный темп — откладываете больше 20% дохода';
+    } else if(rate >= 5){
+      sub.textContent = 'Неплохо. Ориентир для комфортной подушки — 20%';
+    } else if(rate >= 0){
+      sub.textContent = 'Пока откладываете немного от дохода';
+    } else {
+      sub.textContent = 'Сбережений в этом месяце нет';
+    }
+  }
+
+  var TREND_MONTH_ABBR = ["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];
+
+  function monthFactTotals(monthKey){
+    var s = (monthKey === currentMonthKey) ? state : loadState(monthKey);
+    var sum = function(arr){ return arr.reduce(function(acc,r){ return acc + num(r.fact); }, 0); };
+    return {
+      income: sum(s.income),
+      expense: sum(s.fixed) + sum(s.variable),
+      savings: sum(s.savings)
+    };
+  }
+
+  function renderTrend(){
+    var holder = document.getElementById('trendHolder');
+    var legend = document.getElementById('trendLegend');
+    var note = document.getElementById('trendNote');
+    holder.innerHTML = ''; legend.innerHTML = ''; note.textContent = '';
+
+    var idx = loadIndex().slice().sort();
+    if(idx.indexOf(currentMonthKey) === -1) idx.push(currentMonthKey);
+    idx.sort();
+    if(idx.length > 12) idx = idx.slice(idx.length - 12);
+
+    var series = idx.map(function(mk){
+      var t = monthFactTotals(mk);
+      var parts = mk.split('-');
+      var label = TREND_MONTH_ABBR[parseInt(parts[1],10)-1] + " '" + parts[0].slice(2);
+      return {monthKey: mk, label: label, income: t.income, expense: t.expense, savings: t.savings};
+    });
+
+    var hasAnyData = series.some(function(s){ return s.income > 0 || s.expense > 0 || s.savings > 0; });
+    if(series.length < 2 || !hasAnyData){
+      legend.innerHTML = '<p class="empty-note">Заполните ещё пару месяцев (переключайте месяц вверху страницы) — тогда здесь появится история.</p>';
+      return;
+    }
+
+    var COLORS = { income: 'var(--primary)', expense: 'var(--danger)', savings: 'var(--gold)' };
+    var maxVal = 1;
+    series.forEach(function(s){ maxVal = Math.max(maxVal, s.income, s.expense, s.savings); });
+
+    var groupW = 72, barW = 16, barGap = 5, chartH = 170, axisH = 26, padTop = 10;
+    var width = Math.max(320, series.length * groupW);
+    var height = chartH + axisH + padTop;
+    var svgNS = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+    svg.setAttribute("width", width); svg.setAttribute("height", height);
+
+    // baseline
+    var baseline = document.createElementNS(svgNS, "line");
+    baseline.setAttribute("x1", 0); baseline.setAttribute("x2", width);
+    baseline.setAttribute("y1", padTop + chartH); baseline.setAttribute("y2", padTop + chartH);
+    baseline.setAttribute("stroke", "var(--line)"); baseline.setAttribute("stroke-width", "1");
+    svg.appendChild(baseline);
+
+    series.forEach(function(s, i){
+      var groupX = i * groupW + (groupW - (barW*3 + barGap*2))/2;
+      [['income',s.income], ['expense',s.expense], ['savings',s.savings]].forEach(function(pair, j){
+        var key = pair[0], val = pair[1];
+        var barH = (val/maxVal) * chartH;
+        var rect = document.createElementNS(svgNS, "rect");
+        var x = groupX + j*(barW+barGap);
+        rect.setAttribute("x", x);
+        rect.setAttribute("y", padTop + chartH - barH);
+        rect.setAttribute("width", barW);
+        rect.setAttribute("height", Math.max(1, barH));
+        rect.setAttribute("rx", 3);
+        rect.setAttribute("fill", COLORS[key]);
+        var title = document.createElementNS(svgNS, "title");
+        title.textContent = (key === 'income' ? 'Доходы' : key === 'expense' ? 'Расходы' : 'Сбережения') + ', ' + s.label + ': ' + money(val);
+        rect.appendChild(title);
+        svg.appendChild(rect);
+      });
+
+      var label = document.createElementNS(svgNS, "text");
+      label.setAttribute("x", i*groupW + groupW/2);
+      label.setAttribute("y", padTop + chartH + 18);
+      label.setAttribute("text-anchor", "middle");
+      label.setAttribute("font-size", "11");
+      label.setAttribute("font-family", "IBM Plex Mono, monospace");
+      label.setAttribute("fill", "var(--ink-soft)");
+      label.textContent = s.label;
+      svg.appendChild(label);
+    });
+
+    holder.appendChild(svg);
+
+    [['income','Доходы'], ['expense','Расходы'], ['savings','Сбережения']].forEach(function(pair){
+      var item = document.createElement('div'); item.className = 'item';
+      var sw = document.createElement('span'); sw.className = 'swatch'; sw.style.background = COLORS[pair[0]];
+      var nm = document.createElement('span'); nm.textContent = pair[1];
+      item.appendChild(sw); item.appendChild(nm);
+      legend.appendChild(item);
+    });
+
+    var withIncome = series.filter(function(s){ return s.income > 0; });
+    if(withIncome.length > 0){
+      var avgRate = withIncome.reduce(function(acc,s){ return acc + s.savings/s.income; }, 0) / withIncome.length * 100;
+      note.textContent = 'Средняя норма сбережений за этот период: ' + Math.round(avgRate) + '%';
+    }
+  }
+
+  function renderAll(){
+    renderSection('income'); renderSection('fixed'); renderSection('variable'); renderSection('savings');
+    renderBills();
+    updateSummary();
+  }
+
+  function updateSummary(){
+    var inc = sectionTotalsOf('income');
+    var fix = sectionTotalsOf('fixed');
+    var vari = sectionTotalsOf('variable');
+    var sav = sectionTotalsOf('savings');
+    renderChart();
+    renderGauge(inc.fact, sav.fact);
+    renderTrend();
+
+    var expensePlan = fix.plan + vari.plan;
+    var expenseFact = fix.fact + vari.fact;
+
+    updateTileSub('accumulate', inc.plan, inc.fact, 'sumIncomeSub');
+    document.getElementById('sumIncomeFact').textContent = money(inc.fact);
+
+    updateTileSub('spend', expensePlan, expenseFact, 'sumExpenseSub');
+    document.getElementById('sumExpenseFact').textContent = money(expenseFact);
+
+    updateTileSub('accumulate', sav.plan, sav.fact, 'sumSavingsSub');
+    document.getElementById('sumSavingsFact').textContent = money(sav.fact);
+
+    var free = inc.fact - expenseFact - sav.fact;
+    var freeEl = document.getElementById('freeBalance');
+    freeEl.textContent = money(free);
+    freeEl.style.color = free < 0 ? 'var(--danger)' : 'var(--primary)';
+  }
+
+  function updateTileSub(kind, plan, fact, subElId){
+    var el = document.getElementById(subElId);
+    if(plan <= 0 && fact <= 0){
+      el.textContent = 'Цель не задана';
+      el.style.color = 'var(--ink-soft)';
+    } else if(plan <= 0){
+      el.textContent = money(fact) + ' без цели';
+      el.style.color = 'var(--ink-soft)';
+    } else {
+      var pct = fact/plan*100;
+      el.textContent = money(fact) + ' из ' + money(plan) + ' (' + Math.round(pct) + '%)';
+      el.style.color = progressColor(kind, plan, fact);
+    }
+  }
+
+  // ---------- add row handlers ----------
+  document.querySelectorAll('[data-add]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var key = btn.getAttribute('data-add');
+      if(key === 'bill'){
+        state.bills.push(mb(''));
+        persist(); renderBills();
+        requestAnimationFrame(function(){
+          var items = document.querySelectorAll('#billsList .bname');
+          var last = items[items.length-1]; if(last) last.focus();
+        });
+      } else {
+        state[key].push(mk(''));
+        persist(); renderSection(key); updateSummary();
+        requestAnimationFrame(function(){
+          var rows = document.querySelectorAll('#rows-' + key + ' .name-field input');
+          var last = rows[rows.length-1]; if(last) last.focus();
+        });
+      }
+    });
+  });
+
+  // ---------- backup: export / import ----------
+  document.getElementById('exportBtn').addEventListener('click', function(){
+    var months = loadIndex();
+    if(months.indexOf(currentMonthKey) === -1) months.push(currentMonthKey);
+    months.sort();
+
+    var payload = { app: 'otlozhka', version: 1, exportedAt: new Date().toISOString(), months: {} };
+    months.forEach(function(mk){
+      payload.months[mk] = (mk === currentMonthKey) ? state : loadState(mk);
+    });
+
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    var stamp = new Date().toISOString().slice(0,10);
+    a.href = url;
+    a.download = 'otlozhka-backup-' + stamp + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  var importFileInput = document.getElementById('importFile');
+  document.getElementById('importBtn').addEventListener('click', function(){
+    importFileInput.value = '';
+    importFileInput.click();
+  });
+  importFileInput.addEventListener('change', function(){
+    var file = importFileInput.files && importFileInput.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      var parsed;
+      try{ parsed = JSON.parse(reader.result); }
+      catch(e){ alert('Не получилось прочитать файл — это не похоже на резервную копию Отложки.'); return; }
+
+      if(!parsed || typeof parsed.months !== 'object' || !parsed.months){
+        alert('Файл не похоже на резервную копию Отложки — нет данных по месяцам.');
+        return;
+      }
+      var keys = Object.keys(parsed.months);
+      if(keys.length === 0){ alert('В файле нет ни одного месяца.'); return; }
+
+      var existing = loadIndex();
+      var overlap = keys.filter(function(k){ return existing.indexOf(k) > -1; });
+      var msg = 'Импортировать ' + keys.length + ' мес. (' + keys.join(', ') + ')?';
+      if(overlap.length > 0){
+        msg += '\n\nВнимание: месяцы ' + overlap.join(', ') + ' уже есть в этом браузере и будут перезаписаны данными из файла.';
+      }
+      if(!confirm(msg)) return;
+
+      keys.forEach(function(mk){
+        try{
+          localStorage.setItem(storageKey(mk), JSON.stringify(parsed.months[mk]));
+          rememberMonth(mk);
+        }catch(e){ console.error('Не удалось импортировать месяц', mk, e); }
+      });
+
+      switchToMonth(currentMonthKey); // refresh in case the current month was among the imported ones
+      alert('Готово — импортировано месяцев: ' + keys.length);
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', function(){
+    if(confirm('Очистить все данные за ' + monthTitleText(currentMonthKey) + '? Действие необратимо.')){
+      state = defaultState();
+      persist();
+      renderAll();
+    }
+  });
+
+  // ---------- theme toggle ----------
+  var themeBtn = document.getElementById('themeToggle');
+  function applyThemeButton(){
+    var t = currentThemeName();
+    themeBtn.textContent = t === 'dark' ? '☀' : '🌙';
+    themeBtn.title = t === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему';
+  }
+  applyThemeButton();
+  themeBtn.addEventListener('click', function(){
+    var next = currentThemeName() === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
+    applyThemeButton();
+    renderChart();
+    renderGauge(sectionTotalsOf('income').fact, sectionTotalsOf('savings').fact);
+  });
+
+  function monthTitleText(monthKey){
+    var parts = monthKey.split('-');
+    var y = parts[0], m = parseInt(parts[1],10) - 1;
+    return (RU_MONTHS[m] || '') + ' ' + y;
+  }
+  function setMonthTitle(monthKey){
+    var t = monthTitleText(monthKey);
+    document.getElementById('monthTitle').textContent = t.charAt(0).toUpperCase() + t.slice(1);
+  }
+  function switchToMonth(monthKey){
+    currentMonthKey = monthKey;
+    state = loadState(monthKey);
+    setMonthTitle(monthKey);
+    renderAll();
+  }
+
+  var picker = document.getElementById('monthPicker');
+  picker.addEventListener('change', function(){ if(picker.value){ switchToMonth(picker.value); } });
+
+  (function init(){
+    var now = new Date();
+    var mk0 = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+    picker.value = mk0;
+    switchToMonth(mk0);
+  })();
+
+})();
+</script>
+</body>
+</html>

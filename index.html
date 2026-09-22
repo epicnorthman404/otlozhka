@@ -273,6 +273,30 @@
   .legend .swatch{width:10px; height:10px; border-radius:3px; flex:none;}
   .legend .amt{margin-left:auto; color:var(--ink-soft);}
 
+  /* ---------- methods ---------- */
+  .methods-calc{
+    display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end;
+    padding:14px; margin-bottom:6px; background:var(--bg-muted); border-radius:var(--radius-card);
+  }
+  .methods-calc .num-field{width:170px;}
+  .methods-calc .num-field input{
+    font-size:16px; padding:6px 2px; border-bottom:1px solid var(--line);
+  }
+  .methods-calc-note{font-size:12px; color:var(--ink-soft); margin:8px 2px 18px;}
+
+  .method-card{padding:18px 0; border-bottom:1px solid var(--line-soft);}
+  .method-card:last-child{border-bottom:none;}
+  .method-card h3{font-size:16px; margin-bottom:6px;}
+  .method-card .explain{font-size:14px; line-height:1.55; margin-bottom:10px;}
+  .method-card .howcalc{font-size:13px; color:var(--ink-soft); line-height:1.5; margin-bottom:12px;}
+  .method-card .result-lines{
+    background:var(--bg-muted); border-radius:var(--radius-field); padding:10px 14px;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .method-card .result-line{display:flex; justify-content:space-between; gap:12px; font-size:14px;}
+  .method-card .result-line .v{font-size:17px; font-weight:600;}
+  .method-card .caveat{margin-top:10px; font-size:12px; color:var(--ink-soft); line-height:1.5;}
+
   footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--ink-soft);}
 
   @media (max-width:460px){
@@ -340,6 +364,7 @@
     <button class="tab" type="button" data-tab="savings" role="tab">🌱 Сбережения</button>
     <button class="tab" type="button" data-tab="bills" role="tab">📅 Платежи</button>
     <button class="tab" type="button" data-tab="analytics" role="tab">📊 Аналитика</button>
+    <button class="tab" type="button" data-tab="methods" role="tab">📚 Методы</button>
   </div>
 
   <div class="tab-panel" data-tab="income">
@@ -408,6 +433,30 @@
       <div class="trend-scroll"><div id="trendHolder"></div></div>
       <div class="legend" id="trendLegend"></div>
       <div class="gauge-sub" id="trendNote" style="margin-top:6px;"></div>
+    </section>
+  </div>
+
+  <div class="tab-panel" data-tab="methods">
+    <section class="block" id="sec-methods">
+      <div class="block-head">
+        <h2>📚 Методы накопления</h2>
+        <div class="totals" style="font-style:italic;">общие ориентиры, не персональная рекомендация</div>
+      </div>
+
+      <div class="methods-calc">
+        <div class="num-field">
+          <label for="methodsIncomeInput">Доход в месяц</label>
+          <input type="number" id="methodsIncomeInput" inputmode="decimal" placeholder="0">
+        </div>
+        <div class="num-field">
+          <label for="methodsExpenseInput">Расходы в месяц (необязательно)</label>
+          <input type="number" id="methodsExpenseInput" inputmode="decimal" placeholder="0">
+        </div>
+        <button class="add-row" id="methodsResetBtn" type="button">↺ Взять из бюджета за этот месяц</button>
+      </div>
+      <p class="methods-calc-note">Впишите любую сумму — не обязательно ту, что уже в бюджете. Ниже всё пересчитается сразу.</p>
+
+      <div id="methodsHolder"></div>
     </section>
   </div>
 
@@ -880,10 +929,139 @@
     }
   }
 
+  // ---------- reference: popular savings/budgeting rules, as an editable calculator ----------
+  var METHOD_DEFS = [
+    {
+      id: 'cushion',
+      title: '🛟 Подушка безопасности',
+      explain: 'Сумма, которой хватит прожить несколько месяцев, если доход внезапно пропадёт — потеря работы, болезнь и т.п. Её принято держать отдельно от остальных сбережений, в спокойном и быстро доступном месте (вклад, накопительный счёт) — не в акциях и не там, где можно быстро потерять в цене.',
+      howcalc: 'Как считается: ежемесячные расходы (если вписаны — иначе доход как приближение) умножаются на число месяцев, на которое хотите быть готовы.',
+      compute: function(inc, expense){
+        var base = expense > 0 ? expense : inc;
+        return [
+          { label: 'Минимум — 3 месяца', value: base*3 },
+          { label: 'Комфортный запас — 6 месяцев', value: base*6 }
+        ];
+      },
+      caveat: function(expense){
+        return expense > 0
+          ? 'Посчитано от вписанных расходов — так точнее.'
+          : 'Расходы не вписаны — использован доход как приближение. Впишите расходы выше для более точной цифры.';
+      }
+    },
+    {
+      id: 'rule502030',
+      title: '📊 Правило 50/30/20',
+      explain: 'Простой способ поделить доход на три части, не расписывая бюджет по категориям вручную: половина — на обязательное, треть — на себя, остальное — откладывать или гасить долги. Схему популяризовала сенатор Элизабет Уоррен.',
+      howcalc: 'Как считается: доход умножается на 50%, 30% и 20% — три отдельные суммы.',
+      compute: function(inc){
+        return [
+          { label: 'Необходимое (жильё, еда, счета) — 50%', value: inc*0.5 },
+          { label: 'На себя (желания) — 30%', value: inc*0.3 },
+          { label: 'Откладывать / гасить долги — 20%', value: inc*0.2 }
+        ];
+      },
+      caveat: function(){ return 'Доли условные — если, например, жильё дороже 50% дохода, соотношение стоит сдвигать под себя.'; }
+    },
+    {
+      id: 'fire4',
+      title: '🔥 FIRE, правило 4%',
+      explain: 'Идея финансовой независимости от работы: накопить капитал, на доход от которого можно жить (проценты, дивиденды), не тратя сам капитал.',
+      howcalc: 'Как считается: годовые траты (расходы × 12, или доход × 12, если расходы не вписаны) умножаются на 25. Это предполагает, что с капитала безопасно снимать 4% в год, не проедая его — отсюда и название.',
+      compute: function(inc, expense){
+        var base = expense > 0 ? expense : inc;
+        return [ { label: 'Нужный капитал', value: base*300 } ];
+      },
+      caveat: function(){ return 'Консервативная оценка — предполагает доходность капитала около 4% годовых после инфляции.'; }
+    },
+    {
+      id: 'optimistic10',
+      title: '🚀 Оптимистичный вариант (~10% доходности)',
+      explain: 'Тот же принцип независимости, что и в правиле 4%, но при более оптимистичном предположении о доходности вложений.',
+      howcalc: 'Как считается: те же годовые траты умножаются на 10 (доходность ~10% годовых) — то есть на 120 в пересчёте на месяц, вдвое меньше, чем в правиле 4%.',
+      compute: function(inc, expense){
+        var base = expense > 0 ? expense : inc;
+        return [ { label: 'Нужный капитал', value: base*120 } ];
+      },
+      caveat: function(){ return 'Менее консервативно: доходность 10% не гарантирована и в реальности колеблется год от года.'; }
+    },
+    {
+      id: 'housing',
+      title: '🏠 Лимит на жильё',
+      explain: 'Ориентир, чтобы жильё не съедало непропорционально большую часть дохода, оставляя мало на всё остальное.',
+      howcalc: 'Как считается: доход умножается на 30% (комфортный ориентир) и на 50% (жёсткий потолок).',
+      compute: function(inc){
+        return [
+          { label: 'Комфортно — не больше 30%', value: inc*0.3 },
+          { label: 'Жёсткий потолок — не больше 50%', value: inc*0.5 }
+        ];
+      },
+      caveat: function(){ return 'Сюда обычно считают аренду/ипотеку вместе с коммуналкой. Можно свериться с целью по постоянным расходам на вкладке «Расходы».'; }
+    }
+  ];
+
+  function buildMethodsCards(){
+    var holder = document.getElementById('methodsHolder');
+    if(!holder) return;
+    holder.innerHTML = METHOD_DEFS.map(function(m){
+      return '<div class="method-card">' +
+        '<h3>' + m.title + '</h3>' +
+        '<div class="explain">' + m.explain + '</div>' +
+        '<div class="howcalc">' + m.howcalc + '</div>' +
+        '<div class="result-lines" id="result-' + m.id + '"></div>' +
+        '<div class="caveat" id="caveat-' + m.id + '"></div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function recomputeMethods(){
+    var incInput = document.getElementById('methodsIncomeInput');
+    var expInput = document.getElementById('methodsExpenseInput');
+    if(!incInput) return;
+    var inc = num(incInput.value);
+    var expense = num(expInput.value);
+
+    METHOD_DEFS.forEach(function(m){
+      var box = document.getElementById('result-' + m.id);
+      var caveatBox = document.getElementById('caveat-' + m.id);
+      if(!box) return;
+      if(inc <= 0 && expense <= 0){
+        box.innerHTML = '<span class="empty-note">Впишите доход выше, чтобы увидеть цифры.</span>';
+        if(caveatBox) caveatBox.textContent = '';
+        return;
+      }
+      var lines = m.compute(inc, expense);
+      box.innerHTML = lines.map(function(l){
+        return '<div class="result-line"><span>' + l.label + '</span><span class="v num">' + money(l.value) + '</span></div>';
+      }).join('');
+      if(caveatBox) caveatBox.textContent = m.caveat(expense);
+    });
+  }
+
+  function resetMethodsFromBudget(){
+    var incInput = document.getElementById('methodsIncomeInput');
+    var expInput = document.getElementById('methodsExpenseInput');
+    if(!incInput) return;
+    incInput.value = sectionTotalsOf('income').fact || '';
+    expInput.value = (sectionTotalsOf('fixed').fact + sectionTotalsOf('variable').fact) || '';
+    recomputeMethods();
+  }
+
+  (function initMethodsCalc(){
+    buildMethodsCards();
+    var incInput = document.getElementById('methodsIncomeInput');
+    var expInput = document.getElementById('methodsExpenseInput');
+    var resetBtn = document.getElementById('methodsResetBtn');
+    if(incInput) incInput.addEventListener('input', recomputeMethods);
+    if(expInput) expInput.addEventListener('input', recomputeMethods);
+    if(resetBtn) resetBtn.addEventListener('click', resetMethodsFromBudget);
+  })();
+
   function renderAll(){
     renderSection('income'); renderSection('fixed'); renderSection('variable'); renderSection('savings');
     renderBills();
     updateSummary();
+    resetMethodsFromBudget();
   }
 
   function updateSummary(){

@@ -222,7 +222,7 @@
     grid-template-columns: 1fr 96px 96px minmax(120px,1fr);
     grid-template-areas: "head plan fact progress";
   }
-  .item-row-variable{
+  .item-row-simple{
     grid-template-columns: 1fr 110px;
     grid-template-areas: "head amount";
   }
@@ -231,7 +231,7 @@
       grid-template-columns: 1fr 1fr;
       grid-template-areas: "head head" "plan fact" "progress progress";
     }
-    .item-row-variable{
+    .item-row-simple{
       grid-template-columns: 1fr auto;
       grid-template-areas: "head amount";
     }
@@ -412,7 +412,7 @@
     <section class="block" id="sec-income">
       <div class="block-head">
         <h2>💼 <span data-i18n="incomeTitle">Доход</span></h2>
-        <div class="totals"><span data-i18n="labelTarget">цель</span> <b data-total="plan">0 ₽</b> · <span data-i18n="labelActual">факт</span> <b data-total="fact">0 ₽</b></div>
+        <div class="totals"><span data-i18n="labelTotal">итого</span> <b data-total="fact">0 ₽</b></div>
       </div>
       <div id="rows-income"></div>
       <button class="add-row" data-add="income" data-i18n="addIncome">+ добавить источник</button>
@@ -587,6 +587,7 @@
       themeToLight: "Включить светлую тему", themeToDark: "Включить тёмную тему",
       methodsEmptyGlobal: "Впишите доход выше, чтобы увидеть цифры.",
       tileNoTarget: "Цель не задана",
+      incomeEmptySub: "Пока нет данных",
       tileNoTargetSuffix: " без цели",
       importParseError: "Не получилось прочитать файл — это не похоже на резервную копию Отложки.",
       importNoMonthsError: "Файл не похоже на резервную копию Отложки — нет данных по месяцам.",
@@ -681,6 +682,7 @@
       themeToLight: "Switch to light theme", themeToDark: "Switch to dark theme",
       methodsEmptyGlobal: "Enter income above to see the numbers.",
       tileNoTarget: "No target set",
+      incomeEmptySub: "No income recorded yet",
       tileNoTargetSuffix: " (no target)",
       importParseError: "Couldn't read the file — it doesn't look like an Otlozhka backup.",
       importNoMonthsError: "This file doesn't look like an Otlozhka backup — no monthly data found.",
@@ -835,9 +837,9 @@
 
   function renderRow(sectionKey, row){
     var kind = SECTION_KIND[sectionKey];
-    var isVariable = sectionKey === 'variable';
+    var noTarget = (sectionKey === 'variable' || sectionKey === 'income');
     var wrap = document.createElement('div');
-    wrap.className = 'item-row' + (isVariable ? ' item-row-variable' : '');
+    wrap.className = 'item-row' + (noTarget ? ' item-row-simple' : '');
 
     var icon = document.createElement('span');
     icon.className = 'icon';
@@ -864,8 +866,8 @@
     rowHead.className = 'row-head';
     rowHead.appendChild(icon); rowHead.appendChild(nameField); rowHead.appendChild(delBtn);
 
-    if(isVariable){
-      // No target here — variable spending isn't meant to be predicted, just recorded.
+    if(noTarget){
+      // No target here — this isn't something you budget for, just record what actually happened.
       var amountField = document.createElement('div'); amountField.className = 'num-field field-amount';
       var amountLabel = document.createElement('label'); amountLabel.textContent = t('amountFieldLabel');
       var inAmount = document.createElement('input');
@@ -1279,7 +1281,9 @@
     var expensePlan = fix.plan + vari.plan;
     var expenseFact = fix.fact + vari.fact;
 
-    updateTileSub('accumulate', inc.plan, inc.fact, 'sumIncomeSub');
+    var incSubEl = document.getElementById('sumIncomeSub');
+    incSubEl.textContent = inc.fact > 0 ? (t('labelTotal') + ' ' + money(inc.fact)) : t('incomeEmptySub');
+    incSubEl.style.color = 'var(--ink-soft)';
     document.getElementById('sumIncomeFact').textContent = money(inc.fact);
 
     updateTileSub('spend', expensePlan, expenseFact, 'sumExpenseSub');

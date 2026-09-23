@@ -84,6 +84,7 @@
     padding-top: env(safe-area-inset-top,0px);
     padding-bottom: env(safe-area-inset-bottom,0px);
     -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
   }
   .num{font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums;}
   h1,h2,h3{font-family:'Source Serif 4',serif; margin:0; font-weight:600;}
@@ -108,6 +109,11 @@
     border:1px solid var(--line); background:var(--bg-card); color:var(--ink);
     padding:8px 10px; border-radius:var(--radius-field);
   }
+  .mini-select{
+    font-family:'IBM Plex Mono',monospace; font-size:13px;
+    border:1px solid var(--line); background:var(--bg-card); color:var(--ink);
+    padding:8px 6px; border-radius:var(--radius-field); cursor:pointer;
+  }
   .icon-btn{
     border:1px solid var(--line); background:var(--bg-card); color:var(--ink-soft);
     width:36px; height:36px; border-radius:var(--radius-field);
@@ -130,13 +136,14 @@
   /* ---------- hero: gauge + tiles ---------- */
   .hero{
     display:grid; grid-template-columns:220px 1fr;
-    gap:16px; margin-bottom:14px;
+    gap:16px; margin-bottom:14px; min-width:0;
   }
   @media (max-width:640px){ .hero{grid-template-columns:1fr;} }
 
   .gauge-card{
     background:var(--bg-card); border:1px solid var(--line); border-radius:var(--radius-card);
     padding:18px; display:flex; flex-direction:column; align-items:center; text-align:center; justify-content:center;
+    min-width:0;
   }
   .gauge-card .gauge-label{font-size:12px; color:var(--ink-soft); letter-spacing:.02em; margin-bottom:6px;}
   .gauge-card .gauge-sub{font-size:12px; color:var(--ink-soft); margin-top:6px; line-height:1.4;}
@@ -148,15 +155,14 @@
     .summary-panel .gauge-card{ border-right:none; border-bottom:1px solid var(--line); padding:0 0 14px; margin-bottom:14px; }
   }
 
-  .tiles{display:grid; grid-template-columns:repeat(3,1fr); gap:12px;}
-  @media (max-width:520px){ .tiles{grid-template-columns:1fr;} }
+  .tiles{display:grid; grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)); gap:12px; min-width:0;}
   .tile{
     background:var(--bg-card); border:1px solid var(--line); border-radius:var(--radius-card);
-    padding:16px;
+    padding:16px; min-width:0;
   }
   .tile .label{font-size:12px; color:var(--ink-soft); letter-spacing:.02em; display:flex; align-items:center; gap:6px;}
   .tile .amount{font-size:22px; margin-top:6px; font-weight:600;}
-  .tile .sub{margin-top:8px; font-size:13px; color:var(--ink-soft);}
+  .tile .sub{margin-top:8px; font-size:13px; color:var(--ink-soft); overflow-wrap:break-word;}
   .summary-panel .tile{
     background:transparent; border:none; border-radius:0; padding:0 16px; border-right:1px solid var(--line);
   }
@@ -312,40 +318,53 @@
   <header class="cover">
     <div class="title">
       <h1 id="monthTitle">Отложка</h1>
-      <p>Учёт доходов, расходов и сбережений — с прицелом на то, сколько удаётся откладывать.</p>
+      <p data-i18n="appSubtitle">Учёт доходов, расходов и сбережений — с прицелом на то, сколько удаётся откладывать.</p>
     </div>
     <div class="controls">
       <input type="month" id="monthPicker">
+      <select id="langSelect" class="mini-select" title="Language / Язык" aria-label="Language">
+        <option value="ru">RU</option>
+        <option value="en">EN</option>
+      </select>
+      <select id="currencySelect" class="mini-select" title="Currency / Валюта" aria-label="Currency">
+        <option value="RUB">₽ RUB</option>
+        <option value="USD">$ USD</option>
+        <option value="EUR">€ EUR</option>
+        <option value="GBP">£ GBP</option>
+        <option value="KZT">₸ KZT</option>
+        <option value="UAH">₴ UAH</option>
+        <option value="BYN">Br BYN</option>
+      </select>
       <button class="icon-btn" id="themeToggle" title="Сменить тему" aria-label="Сменить тему"></button>
-      <button class="icon-btn" id="exportBtn" title="Скачать резервную копию всех месяцев" aria-label="Скачать резервную копию">⬇</button>
-      <button class="icon-btn" id="importBtn" title="Загрузить резервную копию" aria-label="Загрузить резервную копию">⬆</button>
+      <button class="icon-btn" id="exportBtn" data-i18n-title="exportTitle" data-i18n-aria="exportTitle" title="Скачать резервную копию всех месяцев" aria-label="Скачать резервную копию">⬇</button>
+      <button class="icon-btn" id="importBtn" data-i18n-title="importTitle" data-i18n-aria="importTitle" title="Загрузить резервную копию" aria-label="Загрузить резервную копию">⬆</button>
       <input type="file" id="importFile" accept="application/json" style="display:none;">
-      <button class="icon-btn" id="resetBtn" title="Очистить текущий месяц" aria-label="Очистить текущий месяц">↺</button>
+      <button class="icon-btn" id="resetBtn" data-i18n-title="resetTitle" data-i18n-aria="resetTitle" title="Очистить текущий месяц" aria-label="Очистить текущий месяц">↺</button>
     </div>
   </header>
 
   <section id="sec-summary" class="summary-panel">
-    <div class="summary-eyebrow">👁 Итоги месяца <span>— только для чтения, пересчитываются сами по данным ниже</span></div>
+    <div class="summary-eyebrow">👁 <span data-i18n="summaryEyebrow1">Итоги месяца</span> <span data-i18n="summaryEyebrow2">— только для чтения, пересчитываются сами по данным ниже</span></div>
 
     <div class="hero">
       <div class="gauge-card">
-        <div class="gauge-label">Норма сбережений</div>
+        <div class="gauge-label" data-i18n="gaugeLabel">Норма сбережений</div>
         <svg id="gaugeSvg" width="120" height="120" viewBox="0 0 120 120"></svg>
-        <div class="gauge-sub" id="gaugeSub">Впишите доход и сбережения</div>
+        <div class="gauge-sub" id="gaugeSub" data-i18n="gaugeEmpty">Впишите доход и сбережения</div>
       </div>
       <div class="tiles">
         <div class="tile">
-          <div class="label">💼 Доходы</div>
+          <div class="label">💼 <span data-i18n="tileIncome">Доходы</span></div>
           <div class="amount num" id="sumIncomeFact">0 ₽</div>
           <div class="sub num" id="sumIncomeSub">0 ₽ из 0 ₽</div>
         </div>
         <div class="tile">
-          <div class="label">🧾 Расходы</div>
+          <div class="label">🧾 <span data-i18n="tileExpense">Расходы</span></div>
           <div class="amount num" id="sumExpenseFact">0 ₽</div>
           <div class="sub num" id="sumExpenseSub">0 ₽ из 0 ₽</div>
         </div>
         <div class="tile">
-          <div class="label">🌱 Сбережения</div>
+          <div class="label">🌱 <span data-i18n="tileSavings">Сбережения</span></div>
           <div class="amount num" id="sumSavingsFact">0 ₽</div>
           <div class="sub num" id="sumSavingsSub">0 ₽ из 0 ₽</div>
         </div>
@@ -353,28 +372,28 @@
     </div>
 
     <div class="headline-balance">
-      <div class="label">Свободный остаток (доходы − расходы − сбережения)</div>
+      <div class="label" data-i18n="freeBalanceLabel">Свободный остаток (доходы − расходы − сбережения)</div>
       <div class="amount num" id="freeBalance">0 ₽</div>
     </div>
   </section>
 
   <div class="tabbar" role="tablist">
-    <button class="tab" type="button" data-tab="income" role="tab">💼 Доходы</button>
-    <button class="tab" type="button" data-tab="expenses" role="tab">🧾 Расходы</button>
-    <button class="tab" type="button" data-tab="savings" role="tab">🌱 Сбережения</button>
-    <button class="tab" type="button" data-tab="bills" role="tab">📅 Платежи</button>
-    <button class="tab" type="button" data-tab="analytics" role="tab">📊 Аналитика</button>
-    <button class="tab" type="button" data-tab="methods" role="tab">📚 Методы</button>
+    <button class="tab" type="button" data-tab="income" role="tab">💼 <span data-i18n="tabIncome">Доходы</span></button>
+    <button class="tab" type="button" data-tab="expenses" role="tab">🧾 <span data-i18n="tabExpenses">Расходы</span></button>
+    <button class="tab" type="button" data-tab="savings" role="tab">🌱 <span data-i18n="tabSavings">Сбережения</span></button>
+    <button class="tab" type="button" data-tab="bills" role="tab">📅 <span data-i18n="tabBills">Платежи</span></button>
+    <button class="tab" type="button" data-tab="analytics" role="tab">📊 <span data-i18n="tabAnalytics">Аналитика</span></button>
+    <button class="tab" type="button" data-tab="methods" role="tab">📚 <span data-i18n="tabMethods">Методы</span></button>
   </div>
 
   <div class="tab-panel" data-tab="income">
     <section class="block" id="sec-income">
       <div class="block-head">
-        <h2>💼 Доход</h2>
-        <div class="totals">цель <b data-total="plan">0 ₽</b> · факт <b data-total="fact">0 ₽</b></div>
+        <h2>💼 <span data-i18n="incomeTitle">Доход</span></h2>
+        <div class="totals"><span data-i18n="labelTarget">цель</span> <b data-total="plan">0 ₽</b> · <span data-i18n="labelActual">факт</span> <b data-total="fact">0 ₽</b></div>
       </div>
       <div id="rows-income"></div>
-      <button class="add-row" data-add="income">+ добавить источник</button>
+      <button class="add-row" data-add="income" data-i18n="addIncome">+ добавить источник</button>
     </section>
   </div>
 
@@ -382,20 +401,20 @@
     <div class="split">
       <section class="block" id="sec-fixed">
         <div class="block-head">
-          <h2>🏠 Постоянные расходы</h2>
-          <div class="totals">цель <b data-total="plan">0 ₽</b> · факт <b data-total="fact">0 ₽</b></div>
+          <h2>🏠 <span data-i18n="fixedTitle">Постоянные расходы</span></h2>
+          <div class="totals"><span data-i18n="labelTarget">цель</span> <b data-total="plan">0 ₽</b> · <span data-i18n="labelActual">факт</span> <b data-total="fact">0 ₽</b></div>
         </div>
         <div id="rows-fixed"></div>
-        <button class="add-row" data-add="fixed">+ добавить статью</button>
+        <button class="add-row" data-add="fixed" data-i18n="addFixed">+ добавить статью</button>
       </section>
 
       <section class="block" id="sec-variable">
         <div class="block-head">
-          <h2>🛒 Переменные расходы</h2>
-          <div class="totals">итого <b data-total="fact">0 ₽</b></div>
+          <h2>🛒 <span data-i18n="variableTitle">Переменные расходы</span></h2>
+          <div class="totals"><span data-i18n="labelTotal">итого</span> <b data-total="fact">0 ₽</b></div>
         </div>
         <div id="rows-variable"></div>
-        <button class="add-row" data-add="variable">+ добавить категорию</button>
+        <button class="add-row" data-add="variable" data-i18n="addVariable">+ добавить категорию</button>
       </section>
     </div>
   </div>
@@ -403,25 +422,25 @@
   <div class="tab-panel" data-tab="savings">
     <section class="block" id="sec-savings">
       <div class="block-head">
-        <h2>🌱 Сбережения</h2>
-        <div class="totals">цель <b data-total="plan">0 ₽</b> · факт <b data-total="fact">0 ₽</b></div>
+        <h2>🌱 <span data-i18n="savingsTitle">Сбережения</span></h2>
+        <div class="totals"><span data-i18n="labelTarget">цель</span> <b data-total="plan">0 ₽</b> · <span data-i18n="labelActual">факт</span> <b data-total="fact">0 ₽</b></div>
       </div>
       <div id="rows-savings"></div>
-      <button class="add-row" data-add="savings">+ добавить цель</button>
+      <button class="add-row" data-add="savings" data-i18n="addSavings">+ добавить цель</button>
     </section>
   </div>
 
   <div class="tab-panel" data-tab="bills">
     <section class="block" id="sec-bills">
-      <div class="block-head"><h2>🧾 Оплатить в этом месяце</h2></div>
+      <div class="block-head"><h2>🧾 <span data-i18n="billsTitle">Оплатить в этом месяце</span></h2></div>
       <ul class="bills" id="billsList"></ul>
-      <button class="add-row" data-add="bill">+ добавить платёж</button>
+      <button class="add-row" data-add="bill" data-i18n="addBill">+ добавить платёж</button>
     </section>
   </div>
 
   <div class="tab-panel" data-tab="analytics">
     <section class="block" id="sec-chart">
-      <div class="block-head"><h2>📊 Структура расходов <span style="font-size:12px; color:var(--ink-soft); font-family:Inter,sans-serif; font-weight:400;">по факту</span></h2></div>
+      <div class="block-head"><h2>📊 <span data-i18n="chartTitle">Структура расходов</span> <span style="font-size:12px; color:var(--ink-soft); font-family:Inter,sans-serif; font-weight:400;" data-i18n="byFact">по факту</span></h2></div>
       <div class="chart-wrap">
         <div id="chartHolder"></div>
         <div class="legend" id="chartLegend"></div>
@@ -429,7 +448,7 @@
     </section>
 
     <section class="block" id="sec-trend">
-      <div class="block-head"><h2>📈 История по месяцам <span style="font-size:12px; color:var(--ink-soft); font-family:Inter,sans-serif; font-weight:400;">факт</span></h2></div>
+      <div class="block-head"><h2>📈 <span data-i18n="trendTitle">История по месяцам</span> <span style="font-size:12px; color:var(--ink-soft); font-family:Inter,sans-serif; font-weight:400;" data-i18n="byFact">по факту</span></h2></div>
       <div class="trend-scroll"><div id="trendHolder"></div></div>
       <div class="legend" id="trendLegend"></div>
       <div class="gauge-sub" id="trendNote" style="margin-top:6px;"></div>
@@ -439,28 +458,28 @@
   <div class="tab-panel" data-tab="methods">
     <section class="block" id="sec-methods">
       <div class="block-head">
-        <h2>📚 Методы накопления</h2>
-        <div class="totals" style="font-style:italic;">общие ориентиры, не персональная рекомендация</div>
+        <h2>📚 <span data-i18n="methodsTitle">Методы накопления</span></h2>
+        <div class="totals" style="font-style:italic;" data-i18n="methodsSubtitle">общие ориентиры, не персональная рекомендация</div>
       </div>
 
       <div class="methods-calc">
         <div class="num-field">
-          <label for="methodsIncomeInput">Доход в месяц</label>
+          <label for="methodsIncomeInput" data-i18n="calcIncomeLabel">Доход в месяц</label>
           <input type="number" id="methodsIncomeInput" inputmode="decimal" placeholder="0">
         </div>
         <div class="num-field">
-          <label for="methodsExpenseInput">Расходы в месяц (необязательно)</label>
+          <label for="methodsExpenseInput" data-i18n="calcExpenseLabel">Расходы в месяц (необязательно)</label>
           <input type="number" id="methodsExpenseInput" inputmode="decimal" placeholder="0">
         </div>
-        <button class="add-row" id="methodsResetBtn" type="button">↺ Взять из бюджета за этот месяц</button>
+        <button class="add-row" id="methodsResetBtn" type="button" data-i18n="calcResetBtn">↺ Взять из бюджета за этот месяц</button>
       </div>
-      <p class="methods-calc-note">Впишите любую сумму — не обязательно ту, что уже в бюджете. Ниже всё пересчитается сразу.</p>
+      <p class="methods-calc-note" data-i18n="calcNote">Впишите любую сумму — не обязательно ту, что уже в бюджете. Ниже всё пересчитается сразу.</p>
 
       <div id="methodsHolder"></div>
     </section>
   </div>
 
-  <footer>
+  <footer data-i18n="footerText">
     Данные хранятся только в этом браузере на этом устройстве — очистка истории посещений их не трогает, а вот очистка «куки и данных сайтов» сотрёт всё безвозвратно. Кнопка ⬇ наверху сохраняет резервную копию всех месяцев в файл, ⬆ — загружает её обратно. «Итоги месяца» наверху — только чтение, они считаются по тому, что вы впишете на вкладках ниже. «Цель» — необязательный ориентир для сравнения.
   </footer>
 </div>
@@ -472,17 +491,242 @@
   var STORAGE_PREFIX = "budget_v1_";
   var MONTHS_INDEX_KEY = "budget_v1_months_index";
   var THEME_KEY = "budget_theme_v1";
+  var LANG_KEY = "budget_lang_v1";
+  var CURRENCY_KEY = "budget_currency_v1";
 
-  var RU_MONTHS = ["январь","февраль","март","апрель","май","июнь","июль","август","сентябрь","октябрь","ноябрь","декабрь"];
+  var MONTH_NAMES = {
+    ru: ["январь","февраль","март","апрель","май","июнь","июль","август","сентябрь","октябрь","ноябрь","декабрь"],
+    en: ["January","February","March","April","May","June","July","August","September","October","November","December"]
+  };
+  var TREND_MONTH_ABBR_MAP = {
+    ru: ["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"],
+    en: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+  };
 
-  // ---------- category icon guesser ----------
+  var CURRENCIES = {
+    RUB: {symbol:'₽', position:'after'},
+    USD: {symbol:'$', position:'before'},
+    EUR: {symbol:'€', position:'before'},
+    GBP: {symbol:'£', position:'before'},
+    KZT: {symbol:'₸', position:'after'},
+    UAH: {symbol:'₴', position:'after'},
+    BYN: {symbol:'Br', position:'after'}
+  };
+
+  var currentLang = 'ru';
+  var currentCurrency = 'RUB';
+  try{ currentLang = localStorage.getItem(LANG_KEY) || 'ru'; }catch(e){}
+  try{ currentCurrency = localStorage.getItem(CURRENCY_KEY) || 'RUB'; }catch(e){}
+
+  // ---------- translations ----------
+  var LANG = {
+    ru: {
+      appSubtitle: "Учёт доходов, расходов и сбережений — с прицелом на то, сколько удаётся откладывать.",
+      exportTitle: "Скачать резервную копию всех месяцев",
+      importTitle: "Загрузить резервную копию",
+      resetTitle: "Очистить текущий месяц",
+      summaryEyebrow1: "Итоги месяца",
+      summaryEyebrow2: "— только для чтения, пересчитываются сами по данным ниже",
+      gaugeLabel: "Норма сбережений",
+      gaugeEmpty: "Впишите доход и сбережения",
+      gaugeGreat: "Отличный темп — откладываете больше 20% дохода",
+      gaugeGood: "Неплохо. Ориентир для комфортной подушки — 20%",
+      gaugeSome: "Пока откладываете немного от дохода",
+      gaugeNone: "Сбережений в этом месяце нет",
+      tileIncome: "Доходы", tileExpense: "Расходы", tileSavings: "Сбережения",
+      freeBalanceLabel: "Свободный остаток (доходы − расходы − сбережения)",
+      tabIncome: "Доходы", tabExpenses: "Расходы", tabSavings: "Сбережения",
+      tabBills: "Платежи", tabAnalytics: "Аналитика", tabMethods: "Методы",
+      incomeTitle: "Доход", labelTarget: "цель", labelActual: "факт", labelTotal: "итого",
+      addIncome: "+ добавить источник",
+      fixedTitle: "Постоянные расходы", addFixed: "+ добавить статью",
+      variableTitle: "Переменные расходы", addVariable: "+ добавить категорию",
+      savingsTitle: "Сбережения", addSavings: "+ добавить цель",
+      billsTitle: "Оплатить в этом месяце", addBill: "+ добавить платёж",
+      chartTitle: "Структура расходов", byFact: "по факту",
+      trendTitle: "История по месяцам",
+      methodsTitle: "Методы накопления",
+      methodsSubtitle: "общие ориентиры, не персональная рекомендация",
+      calcIncomeLabel: "Доход в месяц", calcExpenseLabel: "Расходы в месяц (необязательно)",
+      calcResetBtn: "↺ Взять из бюджета за этот месяц",
+      calcNote: "Впишите любую сумму — не обязательно ту, что уже в бюджете. Ниже всё пересчитается сразу.",
+      footerText: "Данные хранятся только в этом браузере на этом устройстве — очистка истории посещений их не трогает, а вот очистка «куки и данных сайтов» сотрёт всё безвозвратно. Кнопка ⬇ наверху сохраняет резервную копию всех месяцев в файл, ⬆ — загружает её обратно. «Итоги месяца» наверху — только чтение, они считаются по тому, что вы впишете на вкладках ниже. «Цель» — необязательный ориентир для сравнения.",
+
+      namePlaceholder: "Название", targetFieldLabel: "Цель", actualFieldLabel: "Факт", amountFieldLabel: "Сумма",
+      deleteRowTitle: "Удалить строку", deleteBillTitle: "Удалить", billNamePlaceholder: "Платёж",
+      billsEmpty: "Платежей пока нет",
+      chartEmpty: "Заполните «Факт» в расходах — тогда здесь появится диаграмма.",
+      chartOther: "Другое",
+      unnamed: "(без названия)",
+      trendEmpty: "Заполните ещё пару месяцев (переключайте месяц вверху страницы) — тогда здесь появится история.",
+      trendAvgPrefix: "Средняя норма сбережений за этот период: ",
+      ofWord: "из",
+      resetConfirm: function(monthLabel){ return "Очистить все данные за " + monthLabel + "? Действие необратимо."; },
+      themeToLight: "Включить светлую тему", themeToDark: "Включить тёмную тему",
+      methodsEmptyGlobal: "Впишите доход выше, чтобы увидеть цифры.",
+      tileNoTarget: "Цель не задана",
+      tileNoTargetSuffix: " без цели",
+      importParseError: "Не получилось прочитать файл — это не похоже на резервную копию Отложки.",
+      importNoMonthsError: "Файл не похоже на резервную копию Отложки — нет данных по месяцам.",
+      importEmptyError: "В файле нет ни одного месяца.",
+      importConfirmPrefix: "Импортировать ",
+      importConfirmMonths: " мес. (",
+      importOverlapWarning: "\n\nВнимание: месяцы ",
+      importOverlapSuffix: " уже есть в этом браузере и будут перезаписаны данными из файла.",
+      importDone: "Готово — импортировано месяцев: ",
+
+      defaultCategories: {
+        income: ["Зарплата","Бонус","Фриланс","Подработка"],
+        fixed: ["Ипотека/аренда","Коммуналка","Интернет/телефон","Страховка","Кредит"],
+        variable: ["Продукты","Здоровье","Транспорт","Машина","Дом","Налоги","Кафе","Шоппинг","Красота","Развлечения","Спорт","Подписки","Образование","Путешествия","Благотворительность","Подарки","Непредвиденное","Разное"],
+        savings: ["Финансовая подушка","Отпуск","Налоги"],
+        bills: ["Ипотека","Коммуналка"]
+      },
+
+      methods: [
+        { id:'cushion', title:'🛟 Подушка безопасности',
+          explain:'Сумма, которой хватит прожить несколько месяцев, если доход внезапно пропадёт — потеря работы, болезнь и т.п. Её принято держать отдельно от остальных сбережений, в спокойном и быстро доступном месте (вклад, накопительный счёт) — не в акциях и не там, где можно быстро потерять в цене.',
+          howcalc:'Как считается: ежемесячные расходы (если вписаны — иначе доход как приближение) умножаются на число месяцев, на которое хотите быть готовы.',
+          lines:[['Минимум — 3 месяца',3],['Комфортный запас — 6 месяцев',6]],
+          caveatFilled:'Посчитано от вписанных расходов — так точнее.',
+          caveatFallback:'Расходы не вписаны — использован доход как приближение. Впишите расходы выше для более точной цифры.' },
+        { id:'rule502030', title:'📊 Правило 50/30/20',
+          explain:'Простой способ поделить доход на три части, не расписывая бюджет по категориям вручную: половина — на обязательное, треть — на себя, остальное — откладывать или гасить долги. Схему популяризовала сенатор Элизабет Уоррен.',
+          howcalc:'Как считается: доход умножается на 50%, 30% и 20% — три отдельные суммы.',
+          lines:[['Необходимое (жильё, еда, счета) — 50%',0.5],['На себя (желания) — 30%',0.3],['Откладывать / гасить долги — 20%',0.2]],
+          incomeOnly:true,
+          caveatFilled:'Доли условные — если, например, жильё дороже 50% дохода, соотношение стоит сдвигать под себя.' },
+        { id:'fire4', title:'🔥 FIRE, правило 4%',
+          explain:'Идея финансовой независимости от работы: накопить капитал, на доход от которого можно жить (проценты, дивиденды), не тратя сам капитал.',
+          howcalc:'Как считается: годовые траты (расходы × 12, или доход × 12, если расходы не вписаны) умножаются на 25. Это предполагает, что с капитала безопасно снимать 4% в год, не проедая его — отсюда и название.',
+          lines:[['Нужный капитал',300]],
+          caveatFilled:'Консервативная оценка — предполагает доходность капитала около 4% годовых после инфляции.' },
+        { id:'optimistic10', title:'🚀 Оптимистичный вариант (~10% доходности)',
+          explain:'Тот же принцип независимости, что и в правиле 4%, но при более оптимистичном предположении о доходности вложений.',
+          howcalc:'Как считается: те же годовые траты умножаются на 10 (доходность ~10% годовых) — то есть на 120 в пересчёте на месяц, вдвое меньше, чем в правиле 4%.',
+          lines:[['Нужный капитал',120]],
+          caveatFilled:'Менее консервативно: доходность 10% не гарантирована и в реальности колеблется год от года.' },
+        { id:'housing', title:'🏠 Лимит на жильё',
+          explain:'Ориентир, чтобы жильё не съедало непропорционально большую часть дохода, оставляя мало на всё остальное.',
+          howcalc:'Как считается: доход умножается на 30% (комфортный ориентир) и на 50% (жёсткий потолок).',
+          lines:[['Комфортно — не больше 30%',0.3],['Жёсткий потолок — не больше 50%',0.5]],
+          incomeOnly:true,
+          caveatFilled:'Сюда обычно считают аренду/ипотеку вместе с коммуналкой. Можно свериться с целью по постоянным расходам на вкладке «Расходы».' }
+      ]
+    },
+    en: {
+      appSubtitle: "Track income, expenses and savings — with an eye on how much you actually manage to put aside.",
+      exportTitle: "Download a backup of all months",
+      importTitle: "Restore a backup",
+      resetTitle: "Clear this month",
+      summaryEyebrow1: "This month's summary",
+      summaryEyebrow2: "— read-only, recalculated automatically from what you enter below",
+      gaugeLabel: "Savings rate",
+      gaugeEmpty: "Enter income and savings",
+      gaugeGreat: "Great pace — you're saving more than 20% of income",
+      gaugeGood: "Not bad. A comfortable cushion is usually around 20%",
+      gaugeSome: "You're saving a bit of your income so far",
+      gaugeNone: "No savings recorded this month",
+      tileIncome: "Income", tileExpense: "Expenses", tileSavings: "Savings",
+      freeBalanceLabel: "Free balance (income − expenses − savings)",
+      tabIncome: "Income", tabExpenses: "Expenses", tabSavings: "Savings",
+      tabBills: "Bills", tabAnalytics: "Analytics", tabMethods: "Methods",
+      incomeTitle: "Income", labelTarget: "target", labelActual: "actual", labelTotal: "total",
+      addIncome: "+ add source",
+      fixedTitle: "Fixed expenses", addFixed: "+ add item",
+      variableTitle: "Variable expenses", addVariable: "+ add category",
+      savingsTitle: "Savings", addSavings: "+ add goal",
+      billsTitle: "Due this month", addBill: "+ add bill",
+      chartTitle: "Spending breakdown", byFact: "actual",
+      trendTitle: "History by month",
+      methodsTitle: "Savings methods",
+      methodsSubtitle: "general reference, not personal advice",
+      calcIncomeLabel: "Income per month", calcExpenseLabel: "Expenses per month (optional)",
+      calcResetBtn: "↺ Pull from this month's budget",
+      calcNote: "Enter any number — it doesn't have to match your actual budget. Everything below recalculates instantly.",
+      footerText: "Data is stored only in this browser on this device — clearing browsing history doesn't touch it, but clearing \"cookies and site data\" (or \"clear everything\") wipes it for good. The ⬇ button above saves a backup of all months to a file, ⬆ restores it. The summary above is read-only — it's calculated from what you enter in the tabs below. \"Target\" is an optional reference point, not a requirement.",
+
+      namePlaceholder: "Name", targetFieldLabel: "Target", actualFieldLabel: "Actual", amountFieldLabel: "Amount",
+      deleteRowTitle: "Delete row", deleteBillTitle: "Delete", billNamePlaceholder: "Bill",
+      billsEmpty: "No bills yet",
+      chartEmpty: "Fill in \"Actual\" for your expenses — a chart will appear here.",
+      chartOther: "Other",
+      unnamed: "(unnamed)",
+      trendEmpty: "Fill in a couple more months (switch months at the top of the page) — history will appear here.",
+      trendAvgPrefix: "Average savings rate over this period: ",
+      ofWord: "of",
+      resetConfirm: function(monthLabel){ return "Clear all data for " + monthLabel + "? This can't be undone."; },
+      themeToLight: "Switch to light theme", themeToDark: "Switch to dark theme",
+      methodsEmptyGlobal: "Enter income above to see the numbers.",
+      tileNoTarget: "No target set",
+      tileNoTargetSuffix: " (no target)",
+      importParseError: "Couldn't read the file — it doesn't look like an Otlozhka backup.",
+      importNoMonthsError: "This file doesn't look like an Otlozhka backup — no monthly data found.",
+      importEmptyError: "There are no months in this file.",
+      importConfirmPrefix: "Import ",
+      importConfirmMonths: " month(s) (",
+      importOverlapWarning: "\n\nNote: months ",
+      importOverlapSuffix: " already exist in this browser and will be overwritten with the file's data.",
+      importDone: "Done — months imported: ",
+
+      defaultCategories: {
+        income: ["Salary","Bonus","Freelance","Side gig"],
+        fixed: ["Rent/mortgage","Utilities","Internet/phone","Insurance","Loan"],
+        variable: ["Groceries","Health","Transport","Car","Home","Taxes","Cafes","Shopping","Beauty","Entertainment","Sports","Subscriptions","Education","Travel","Charity","Gifts","Unexpected","Other"],
+        savings: ["Emergency fund","Vacation","Taxes"],
+        bills: ["Mortgage","Utilities"]
+      },
+
+      methods: [
+        { id:'cushion', title:'🛟 Emergency fund',
+          explain:'An amount that would let you live for a few months if your income suddenly stopped — job loss, illness, and so on. It\'s usually kept separate from other savings, somewhere calm and quickly accessible (a savings account) — not in stocks or anything that can drop in value fast.',
+          howcalc:'How it\'s calculated: your monthly expenses (or income, as an approximation if expenses aren\'t filled in) multiplied by how many months of buffer you want.',
+          lines:[['Minimum — 3 months',3],['Comfortable buffer — 6 months',6]],
+          caveatFilled:'Calculated from your entered expenses — that\'s more accurate.',
+          caveatFallback:'Expenses aren\'t filled in — income was used as an approximation. Enter expenses above for a more accurate number.' },
+        { id:'rule502030', title:'📊 The 50/30/20 rule',
+          explain:'A simple way to split income into three parts without budgeting every category by hand: half for needs, a third for wants, the rest for savings or debt. The rule was popularized by Senator Elizabeth Warren.',
+          howcalc:'How it\'s calculated: income multiplied by 50%, 30% and 20% — three separate amounts.',
+          lines:[['Needs (housing, food, bills) — 50%',0.5],['Wants — 30%',0.3],['Savings / debt payoff — 20%',0.2]],
+          incomeOnly:true,
+          caveatFilled:'The split is just a guideline — if housing costs more than 50% of income, for example, it\'s worth adjusting the ratio to fit your situation.' },
+        { id:'fire4', title:'🔥 FIRE, the 4% rule',
+          explain:'The idea of financial independence from work: save up a capital sum you can live off the returns of (interest, dividends) without spending the capital itself.',
+          howcalc:'How it\'s calculated: annual spending (expenses × 12, or income × 12 if expenses aren\'t filled in) multiplied by 25. This assumes it\'s safe to withdraw 4% of the capital per year without depleting it — hence the name.',
+          lines:[['Capital needed',300]],
+          caveatFilled:'A conservative estimate — assumes roughly 4% annual returns after inflation.' },
+        { id:'optimistic10', title:'🚀 Optimistic version (~10% returns)',
+          explain:'The same independence principle as the 4% rule, but with a more optimistic assumption about investment returns.',
+          howcalc:'How it\'s calculated: the same annual spending multiplied by 10 (≈10% annual returns) — i.e. by 120 in monthly terms, half of the 4% rule.',
+          lines:[['Capital needed',120]],
+          caveatFilled:'Less conservative: a 10% return isn\'t guaranteed and varies year to year in practice.' },
+        { id:'housing', title:'🏠 Housing cap',
+          explain:'A reference point so housing doesn\'t eat up a disproportionate share of income, leaving little for everything else.',
+          howcalc:'How it\'s calculated: income multiplied by 30% (comfortable target) and 50% (hard ceiling).',
+          lines:[['Comfortable — no more than 30%',0.3],['Hard ceiling — no more than 50%',0.5]],
+          incomeOnly:true,
+          caveatFilled:'This usually includes rent/mortgage plus utilities together. You can compare it against your fixed-expenses target on the "Expenses" tab.' }
+      ]
+    }
+  };
+  function t(key){ return (LANG[currentLang] && LANG[currentLang][key] !== undefined) ? LANG[currentLang][key] : LANG.ru[key]; }
+
+  // ---------- category icon guesser (keywords in both languages) ----------
   var ICON_RULES = [
-    ["зарплат","💼"], ["бонус","🎁"], ["фриланс","🧑‍💻"], ["подработ","🛠️"], ["авито","🛠️"], ["источник","💵"],
-    ["ипотек","🏠"], ["аренд","🏠"], ["коммунал","💡"], ["интернет","📶"], ["телефон","📶"], ["страховк","🛡️"], ["кредит","🏦"],
-    ["продукт","🛒"], ["здоровь","💊"], ["транспорт","🚌"], ["машин","🚗"], ["авто","🚗"], ["налог","📄"], ["кафе","☕"], ["рестора","☕"],
-    ["шоппинг","🛍️"], ["одежд","🛍️"], ["красот","💅"], ["развлеч","🎬"], ["спорт","🏋️"], ["фитнес","🏋️"], ["подписк","🔁"],
-    ["образован","🎓"], ["учеб","🎓"], ["путешеств","✈️"], ["отпуск","🌴"], ["благотворит","❤️"], ["подарк","🎀"],
-    ["непредвиден","⚠️"], ["подушк","🛟"], ["сбережен","🌱"], ["накоплен","🌱"], ["конверт","✉️"], ["инвест","📈"], ["дом","🧹"], ["разное","🔹"]
+    ["зарплат","💼"], ["salary","💼"], ["бонус","🎁"], ["bonus","🎁"], ["фриланс","🧑‍💻"], ["freelance","🧑‍💻"],
+    ["подработ","🛠️"], ["side gig","🛠️"], ["авито","🛠️"], ["источник","💵"], ["income","💵"],
+    ["ипотек","🏠"], ["mortgage","🏠"], ["аренд","🏠"], ["rent","🏠"], ["коммунал","💡"], ["utilit","💡"],
+    ["интернет","📶"], ["internet","📶"], ["телефон","📶"], ["phone","📶"], ["страховк","🛡️"], ["insur","🛡️"],
+    ["кредит","🏦"], ["loan","🏦"],
+    ["продукт","🛒"], ["grocer","🛒"], ["здоровь","💊"], ["health","💊"], ["транспорт","🚌"], ["transport","🚌"],
+    ["машин","🚗"], ["авто","🚗"], ["car","🚗"], ["налог","📄"], ["tax","📄"], ["кафе","☕"], ["рестора","☕"], ["cafe","☕"], ["restaurant","☕"],
+    ["шоппинг","🛍️"], ["одежд","🛍️"], ["shopping","🛍️"], ["clothes","🛍️"], ["красот","💅"], ["beauty","💅"],
+    ["развлеч","🎬"], ["entertain","🎬"], ["спорт","🏋️"], ["фитнес","🏋️"], ["sport","🏋️"], ["fitness","🏋️"],
+    ["подписк","🔁"], ["subscri","🔁"], ["образован","🎓"], ["учеб","🎓"], ["educat","🎓"],
+    ["путешеств","✈️"], ["travel","✈️"], ["отпуск","🌴"], ["vacation","🌴"], ["благотворит","❤️"], ["charity","❤️"],
+    ["подарк","🎀"], ["gift","🎀"], ["непредвиден","⚠️"], ["unexpected","⚠️"],
+    ["подушк","🛟"], ["cushion","🛟"], ["emergency","🛟"], ["сбережен","🌱"], ["накоплен","🌱"], ["saving","🌱"],
+    ["конверт","✉️"], ["envelope","✉️"], ["инвест","📈"], ["invest","📈"], ["дом","🧹"], ["home","🧹"], ["разное","🔹"], ["other","🔹"]
   ];
   function pickIcon(name){
     var n = (name || '').toLowerCase();
@@ -491,17 +735,13 @@
   }
 
   function defaultState(){
+    var c = t('defaultCategories');
     return {
-      income: [ mk("Зарплата"), mk("Бонус"), mk("Фриланс"), mk("Подработка") ],
-      fixed: [ mk("Ипотека/аренда"), mk("Коммуналка"), mk("Интернет/телефон"), mk("Страховка"), mk("Кредит") ],
-      variable: [
-        mk("Продукты"), mk("Здоровье"), mk("Транспорт"), mk("Машина"), mk("Дом"),
-        mk("Налоги"), mk("Кафе"), mk("Шоппинг"), mk("Красота"), mk("Развлечения"),
-        mk("Спорт"), mk("Подписки"), mk("Образование"), mk("Путешествия"),
-        mk("Благотворительность"), mk("Подарки"), mk("Непредвиденное"), mk("Разное")
-      ],
-      savings: [ mk("Финансовая подушка"), mk("Отпуск"), mk("Налоги") ],
-      bills: [ mb("Ипотека"), mb("Коммуналка") ]
+      income: c.income.map(mk),
+      fixed: c.fixed.map(mk),
+      variable: c.variable.map(mk),
+      savings: c.savings.map(mk),
+      bills: c.bills.map(mb)
     };
   }
   var uidCounter = 1;
@@ -544,10 +784,12 @@
   }
 
   function num(v){ var n = parseFloat(v); return isFinite(n) ? n : 0; }
-  var fmt = new Intl.NumberFormat('ru-RU', {maximumFractionDigits: 0});
+  var fmt = new Intl.NumberFormat(currentLang === 'en' ? 'en-US' : 'ru-RU', {maximumFractionDigits: 0});
   function money(v){
     var sign = v < 0 ? "−" : "";
-    return sign + fmt.format(Math.abs(Math.round(v))) + " ₽";
+    var cur = CURRENCIES[currentCurrency] || CURRENCIES.RUB;
+    var numStr = fmt.format(Math.abs(Math.round(v)));
+    return cur.position === 'before' ? (sign + cur.symbol + numStr) : (sign + numStr + ' ' + cur.symbol);
   }
 
   function sectionTotalsOf(sectionKey){
@@ -582,7 +824,7 @@
     var nameField = document.createElement('div');
     nameField.className = 'name-field';
     var inName = document.createElement('input');
-    inName.type = 'text'; inName.value = row.name; inName.placeholder = 'Название';
+    inName.type = 'text'; inName.value = row.name; inName.placeholder = t('namePlaceholder');
     inName.addEventListener('input', function(){
       row.name = inName.value; persist();
       icon.textContent = pickIcon(row.name);
@@ -590,7 +832,7 @@
     nameField.appendChild(inName);
 
     var delBtn = document.createElement('button');
-    delBtn.className = 'del-btn'; delBtn.textContent = '×'; delBtn.title = 'Удалить строку'; delBtn.setAttribute('aria-label','Удалить строку');
+    delBtn.className = 'del-btn'; delBtn.textContent = '×'; delBtn.title = t('deleteRowTitle'); delBtn.setAttribute('aria-label', t('deleteRowTitle'));
     delBtn.addEventListener('click', function(){
       state[sectionKey] = state[sectionKey].filter(function(r){ return r.id !== row.id; });
       persist(); renderSection(sectionKey); updateSummary();
@@ -599,7 +841,7 @@
     if(isVariable){
       // No target here — variable spending isn't meant to be predicted, just recorded.
       var amountField = document.createElement('div'); amountField.className = 'num-field';
-      var amountLabel = document.createElement('label'); amountLabel.textContent = 'Сумма';
+      var amountLabel = document.createElement('label'); amountLabel.textContent = t('amountFieldLabel');
       var inAmount = document.createElement('input');
       inAmount.type = 'number'; inAmount.inputMode = 'decimal'; inAmount.value = row.fact || ''; inAmount.placeholder = '0';
       inAmount.addEventListener('input', function(){
@@ -613,13 +855,13 @@
     }
 
     var planField = document.createElement('div'); planField.className = 'num-field';
-    var planLabel = document.createElement('label'); planLabel.textContent = 'Цель';
+    var planLabel = document.createElement('label'); planLabel.textContent = t('targetFieldLabel');
     var inPlan = document.createElement('input');
     inPlan.type = 'number'; inPlan.inputMode = 'decimal'; inPlan.value = row.plan || ''; inPlan.placeholder = '0';
     planField.appendChild(planLabel); planField.appendChild(inPlan);
 
     var factField = document.createElement('div'); factField.className = 'num-field';
-    var factLabel = document.createElement('label'); factLabel.textContent = 'Факт';
+    var factLabel = document.createElement('label'); factLabel.textContent = t('actualFieldLabel');
     var inFact = document.createElement('input');
     inFact.type = 'number'; inFact.inputMode = 'decimal'; inFact.value = row.fact || ''; inFact.placeholder = '0';
     factField.appendChild(factLabel); factField.appendChild(inFact);
@@ -647,7 +889,7 @@
         var color = progressColor(kind, plan, fact);
         fill.style.width = Math.max(4, Math.min(100,pct)) + '%';
         fill.style.background = color;
-        progLabel.textContent = money(fact) + ' из ' + money(plan) + ' (' + Math.round(pct) + '%)';
+        progLabel.textContent = money(fact) + ' ' + t('ofWord') + ' ' + money(plan) + ' (' + Math.round(pct) + '%)';
         progLabel.style.color = color;
       }
       updateSectionTotals(sectionKey);
@@ -687,7 +929,7 @@
     ul.innerHTML = '';
     if(state.bills.length === 0){
       var empty = document.createElement('div');
-      empty.className = 'empty-note'; empty.textContent = 'Платежей пока нет';
+      empty.className = 'empty-note'; empty.textContent = t('billsEmpty');
       ul.appendChild(empty);
     }
     state.bills
@@ -704,7 +946,7 @@
         cb.addEventListener('change', function(){ bill.paid = cb.checked; persist(); renderBills(); });
 
         var inName = document.createElement('input');
-        inName.className = 'bname'; inName.type = 'text'; inName.value = bill.name; inName.placeholder = 'Платёж';
+        inName.className = 'bname'; inName.type = 'text'; inName.value = bill.name; inName.placeholder = t('billNamePlaceholder');
         inName.addEventListener('input', function(){ bill.name = inName.value; persist(); });
 
         var inAmount = document.createElement('input');
@@ -717,7 +959,7 @@
         inDate.addEventListener('change', function(){ bill.date = inDate.value; persist(); renderBills(); });
 
         var delBtn = document.createElement('button');
-        delBtn.className = 'del-btn'; delBtn.textContent = '×'; delBtn.title = 'Удалить'; delBtn.setAttribute('aria-label','Удалить платёж');
+        delBtn.className = 'del-btn'; delBtn.textContent = '×'; delBtn.title = t('deleteBillTitle'); delBtn.setAttribute('aria-label', t('deleteBillTitle'));
         delBtn.addEventListener('click', function(){
           state.bills = state.bills.filter(function(b){ return b.id !== bill.id; });
           persist(); renderBills();
@@ -742,18 +984,18 @@
     holder.innerHTML = ""; legend.innerHTML = "";
 
     var combined = state.fixed.concat(state.variable).map(function(r){
-      return {name: r.name || '(без названия)', value: Math.max(0, num(r.fact))};
+      return {name: r.name || t('unnamed'), value: Math.max(0, num(r.fact))};
     }).filter(function(r){ return r.value > 0; });
 
     if(combined.length === 0){
-      legend.innerHTML = '<p class="empty-note">Заполните «Факт» в расходах — тогда здесь появится диаграмма.</p>';
+      legend.innerHTML = '<p class="empty-note">' + t('chartEmpty') + '</p>';
       return;
     }
 
     combined.sort(function(a,b){ return b.value - a.value; });
     var top = combined.slice(0, 8);
     var restSum = combined.slice(8).reduce(function(s,r){ return s + r.value; }, 0);
-    if(restSum > 0) top.push({name:'Другое', value: restSum});
+    if(restSum > 0) top.push({name: t('chartOther'), value: restSum});
 
     var total = top.reduce(function(s,r){ return s + r.value; }, 0);
     var palette = CHART_PALETTE[currentThemeName()];
@@ -815,19 +1057,17 @@
         'font-size="22" fill="var(--ink)">' + (rate === null ? '—' : Math.round(rate) + '%') + '</text>';
 
     if(rate === null){
-      sub.textContent = 'Впишите доход и сбережения';
+      sub.textContent = t('gaugeEmpty');
     } else if(rate >= 20){
-      sub.textContent = 'Отличный темп — откладываете больше 20% дохода';
+      sub.textContent = t('gaugeGreat');
     } else if(rate >= 5){
-      sub.textContent = 'Неплохо. Ориентир для комфортной подушки — 20%';
+      sub.textContent = t('gaugeGood');
     } else if(rate >= 0){
-      sub.textContent = 'Пока откладываете немного от дохода';
+      sub.textContent = t('gaugeSome');
     } else {
-      sub.textContent = 'Сбережений в этом месяце нет';
+      sub.textContent = t('gaugeNone');
     }
   }
-
-  var TREND_MONTH_ABBR = ["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];
 
   function monthFactTotals(monthKey){
     var s = (monthKey === currentMonthKey) ? state : loadState(monthKey);
@@ -850,20 +1090,22 @@
     idx.sort();
     if(idx.length > 12) idx = idx.slice(idx.length - 12);
 
+    var abbr = TREND_MONTH_ABBR_MAP[currentLang] || TREND_MONTH_ABBR_MAP.ru;
     var series = idx.map(function(mk){
-      var t = monthFactTotals(mk);
+      var totals = monthFactTotals(mk);
       var parts = mk.split('-');
-      var label = TREND_MONTH_ABBR[parseInt(parts[1],10)-1] + " '" + parts[0].slice(2);
-      return {monthKey: mk, label: label, income: t.income, expense: t.expense, savings: t.savings};
+      var label = abbr[parseInt(parts[1],10)-1] + " '" + parts[0].slice(2);
+      return {monthKey: mk, label: label, income: totals.income, expense: totals.expense, savings: totals.savings};
     });
 
     var hasAnyData = series.some(function(s){ return s.income > 0 || s.expense > 0 || s.savings > 0; });
     if(series.length < 2 || !hasAnyData){
-      legend.innerHTML = '<p class="empty-note">Заполните ещё пару месяцев (переключайте месяц вверху страницы) — тогда здесь появится история.</p>';
+      legend.innerHTML = '<p class="empty-note">' + t('trendEmpty') + '</p>';
       return;
     }
 
     var COLORS = { income: 'var(--primary)', expense: 'var(--danger)', savings: 'var(--gold)' };
+    var LEGEND_LABELS = { income: t('tileIncome'), expense: t('tileExpense'), savings: t('tileSavings') };
     var maxVal = 1;
     series.forEach(function(s){ maxVal = Math.max(maxVal, s.income, s.expense, s.savings); });
 
@@ -896,7 +1138,7 @@
         rect.setAttribute("rx", 3);
         rect.setAttribute("fill", COLORS[key]);
         var title = document.createElementNS(svgNS, "title");
-        title.textContent = (key === 'income' ? 'Доходы' : key === 'expense' ? 'Расходы' : 'Сбережения') + ', ' + s.label + ': ' + money(val);
+        title.textContent = LEGEND_LABELS[key] + ', ' + s.label + ': ' + money(val);
         rect.appendChild(title);
         svg.appendChild(rect);
       });
@@ -914,7 +1156,7 @@
 
     holder.appendChild(svg);
 
-    [['income','Доходы'], ['expense','Расходы'], ['savings','Сбережения']].forEach(function(pair){
+    [['income',LEGEND_LABELS.income], ['expense',LEGEND_LABELS.expense], ['savings',LEGEND_LABELS.savings]].forEach(function(pair){
       var item = document.createElement('div'); item.className = 'item';
       var sw = document.createElement('span'); sw.className = 'swatch'; sw.style.background = COLORS[pair[0]];
       var nm = document.createElement('span'); nm.textContent = pair[1];
@@ -925,85 +1167,16 @@
     var withIncome = series.filter(function(s){ return s.income > 0; });
     if(withIncome.length > 0){
       var avgRate = withIncome.reduce(function(acc,s){ return acc + s.savings/s.income; }, 0) / withIncome.length * 100;
-      note.textContent = 'Средняя норма сбережений за этот период: ' + Math.round(avgRate) + '%';
+      note.textContent = t('trendAvgPrefix') + Math.round(avgRate) + '%';
     }
   }
 
   // ---------- reference: popular savings/budgeting rules, as an editable calculator ----------
-  var METHOD_DEFS = [
-    {
-      id: 'cushion',
-      title: '🛟 Подушка безопасности',
-      explain: 'Сумма, которой хватит прожить несколько месяцев, если доход внезапно пропадёт — потеря работы, болезнь и т.п. Её принято держать отдельно от остальных сбережений, в спокойном и быстро доступном месте (вклад, накопительный счёт) — не в акциях и не там, где можно быстро потерять в цене.',
-      howcalc: 'Как считается: ежемесячные расходы (если вписаны — иначе доход как приближение) умножаются на число месяцев, на которое хотите быть готовы.',
-      compute: function(inc, expense){
-        var base = expense > 0 ? expense : inc;
-        return [
-          { label: 'Минимум — 3 месяца', value: base*3 },
-          { label: 'Комфортный запас — 6 месяцев', value: base*6 }
-        ];
-      },
-      caveat: function(expense){
-        return expense > 0
-          ? 'Посчитано от вписанных расходов — так точнее.'
-          : 'Расходы не вписаны — использован доход как приближение. Впишите расходы выше для более точной цифры.';
-      }
-    },
-    {
-      id: 'rule502030',
-      title: '📊 Правило 50/30/20',
-      explain: 'Простой способ поделить доход на три части, не расписывая бюджет по категориям вручную: половина — на обязательное, треть — на себя, остальное — откладывать или гасить долги. Схему популяризовала сенатор Элизабет Уоррен.',
-      howcalc: 'Как считается: доход умножается на 50%, 30% и 20% — три отдельные суммы.',
-      compute: function(inc){
-        return [
-          { label: 'Необходимое (жильё, еда, счета) — 50%', value: inc*0.5 },
-          { label: 'На себя (желания) — 30%', value: inc*0.3 },
-          { label: 'Откладывать / гасить долги — 20%', value: inc*0.2 }
-        ];
-      },
-      caveat: function(){ return 'Доли условные — если, например, жильё дороже 50% дохода, соотношение стоит сдвигать под себя.'; }
-    },
-    {
-      id: 'fire4',
-      title: '🔥 FIRE, правило 4%',
-      explain: 'Идея финансовой независимости от работы: накопить капитал, на доход от которого можно жить (проценты, дивиденды), не тратя сам капитал.',
-      howcalc: 'Как считается: годовые траты (расходы × 12, или доход × 12, если расходы не вписаны) умножаются на 25. Это предполагает, что с капитала безопасно снимать 4% в год, не проедая его — отсюда и название.',
-      compute: function(inc, expense){
-        var base = expense > 0 ? expense : inc;
-        return [ { label: 'Нужный капитал', value: base*300 } ];
-      },
-      caveat: function(){ return 'Консервативная оценка — предполагает доходность капитала около 4% годовых после инфляции.'; }
-    },
-    {
-      id: 'optimistic10',
-      title: '🚀 Оптимистичный вариант (~10% доходности)',
-      explain: 'Тот же принцип независимости, что и в правиле 4%, но при более оптимистичном предположении о доходности вложений.',
-      howcalc: 'Как считается: те же годовые траты умножаются на 10 (доходность ~10% годовых) — то есть на 120 в пересчёте на месяц, вдвое меньше, чем в правиле 4%.',
-      compute: function(inc, expense){
-        var base = expense > 0 ? expense : inc;
-        return [ { label: 'Нужный капитал', value: base*120 } ];
-      },
-      caveat: function(){ return 'Менее консервативно: доходность 10% не гарантирована и в реальности колеблется год от года.'; }
-    },
-    {
-      id: 'housing',
-      title: '🏠 Лимит на жильё',
-      explain: 'Ориентир, чтобы жильё не съедало непропорционально большую часть дохода, оставляя мало на всё остальное.',
-      howcalc: 'Как считается: доход умножается на 30% (комфортный ориентир) и на 50% (жёсткий потолок).',
-      compute: function(inc){
-        return [
-          { label: 'Комфортно — не больше 30%', value: inc*0.3 },
-          { label: 'Жёсткий потолок — не больше 50%', value: inc*0.5 }
-        ];
-      },
-      caveat: function(){ return 'Сюда обычно считают аренду/ипотеку вместе с коммуналкой. Можно свериться с целью по постоянным расходам на вкладке «Расходы».'; }
-    }
-  ];
-
   function buildMethodsCards(){
     var holder = document.getElementById('methodsHolder');
     if(!holder) return;
-    holder.innerHTML = METHOD_DEFS.map(function(m){
+    var defs = t('methods');
+    holder.innerHTML = defs.map(function(m){
       return '<div class="method-card">' +
         '<h3>' + m.title + '</h3>' +
         '<div class="explain">' + m.explain + '</div>' +
@@ -1020,21 +1193,25 @@
     if(!incInput) return;
     var inc = num(incInput.value);
     var expense = num(expInput.value);
+    var defs = t('methods');
 
-    METHOD_DEFS.forEach(function(m){
+    defs.forEach(function(m){
       var box = document.getElementById('result-' + m.id);
       var caveatBox = document.getElementById('caveat-' + m.id);
       if(!box) return;
       if(inc <= 0 && expense <= 0){
-        box.innerHTML = '<span class="empty-note">Впишите доход выше, чтобы увидеть цифры.</span>';
+        box.innerHTML = '<span class="empty-note">' + t('methodsEmptyGlobal') + '</span>';
         if(caveatBox) caveatBox.textContent = '';
         return;
       }
-      var lines = m.compute(inc, expense);
+      var base = m.incomeOnly ? inc : (expense > 0 ? expense : inc);
+      var lines = m.lines.map(function(pair){ return { label: pair[0], value: base * pair[1] }; });
       box.innerHTML = lines.map(function(l){
         return '<div class="result-line"><span>' + l.label + '</span><span class="v num">' + money(l.value) + '</span></div>';
       }).join('');
-      if(caveatBox) caveatBox.textContent = m.caveat(expense);
+      if(caveatBox){
+        caveatBox.textContent = (!m.incomeOnly && expense <= 0 && m.caveatFallback) ? m.caveatFallback : m.caveatFilled;
+      }
     });
   }
 
@@ -1094,14 +1271,14 @@
   function updateTileSub(kind, plan, fact, subElId){
     var el = document.getElementById(subElId);
     if(plan <= 0 && fact <= 0){
-      el.textContent = 'Цель не задана';
+      el.textContent = t('tileNoTarget');
       el.style.color = 'var(--ink-soft)';
     } else if(plan <= 0){
-      el.textContent = money(fact) + ' без цели';
+      el.textContent = money(fact) + t('tileNoTargetSuffix');
       el.style.color = 'var(--ink-soft)';
     } else {
       var pct = fact/plan*100;
-      el.textContent = money(fact) + ' из ' + money(plan) + ' (' + Math.round(pct) + '%)';
+      el.textContent = money(fact) + ' ' + t('ofWord') + ' ' + money(plan) + ' (' + Math.round(pct) + '%)';
       el.style.color = progressColor(kind, plan, fact);
     }
   }
@@ -1163,20 +1340,20 @@
     reader.onload = function(){
       var parsed;
       try{ parsed = JSON.parse(reader.result); }
-      catch(e){ alert('Не получилось прочитать файл — это не похоже на резервную копию Отложки.'); return; }
+      catch(e){ alert(t('importParseError')); return; }
 
       if(!parsed || typeof parsed.months !== 'object' || !parsed.months){
-        alert('Файл не похоже на резервную копию Отложки — нет данных по месяцам.');
+        alert(t('importNoMonthsError'));
         return;
       }
       var keys = Object.keys(parsed.months);
-      if(keys.length === 0){ alert('В файле нет ни одного месяца.'); return; }
+      if(keys.length === 0){ alert(t('importEmptyError')); return; }
 
       var existing = loadIndex();
       var overlap = keys.filter(function(k){ return existing.indexOf(k) > -1; });
-      var msg = 'Импортировать ' + keys.length + ' мес. (' + keys.join(', ') + ')?';
+      var msg = t('importConfirmPrefix') + keys.length + t('importConfirmMonths') + keys.join(', ') + ')?';
       if(overlap.length > 0){
-        msg += '\n\nВнимание: месяцы ' + overlap.join(', ') + ' уже есть в этом браузере и будут перезаписаны данными из файла.';
+        msg += t('importOverlapWarning') + overlap.join(', ') + t('importOverlapSuffix');
       }
       if(!confirm(msg)) return;
 
@@ -1184,17 +1361,17 @@
         try{
           localStorage.setItem(storageKey(mk), JSON.stringify(parsed.months[mk]));
           rememberMonth(mk);
-        }catch(e){ console.error('Не удалось импортировать месяц', mk, e); }
+        }catch(e){ console.error('Import failed for month', mk, e); }
       });
 
       switchToMonth(currentMonthKey); // refresh in case the current month was among the imported ones
-      alert('Готово — импортировано месяцев: ' + keys.length);
+      alert(t('importDone') + keys.length);
     };
     reader.readAsText(file);
   });
 
   document.getElementById('resetBtn').addEventListener('click', function(){
-    if(confirm('Очистить все данные за ' + monthTitleText(currentMonthKey) + '? Действие необратимо.')){
+    if(confirm(t('resetConfirm')(monthTitleText(currentMonthKey)))){
       state = defaultState();
       persist();
       renderAll();
@@ -1204,9 +1381,9 @@
   // ---------- theme toggle ----------
   var themeBtn = document.getElementById('themeToggle');
   function applyThemeButton(){
-    var t = currentThemeName();
-    themeBtn.textContent = t === 'dark' ? '☀' : '🌙';
-    themeBtn.title = t === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему';
+    var th = currentThemeName();
+    themeBtn.textContent = th === 'dark' ? '☀' : '🌙';
+    themeBtn.title = th === 'dark' ? t('themeToLight') : t('themeToDark');
   }
   applyThemeButton();
   themeBtn.addEventListener('click', function(){
@@ -1246,14 +1423,58 @@
     setActiveTab(saved || 'income');
   })();
 
+  // ---------- language & currency ----------
+  function applyStaticI18n(){
+    document.documentElement.setAttribute('lang', currentLang);
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(function(el){
+      el.title = t(el.getAttribute('data-i18n-title'));
+    });
+    document.querySelectorAll('[data-i18n-aria]').forEach(function(el){
+      el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria')));
+    });
+  }
+
+  function applyLanguage(lang){
+    currentLang = lang;
+    try{ localStorage.setItem(LANG_KEY, lang); }catch(e){}
+    fmt = new Intl.NumberFormat(currentLang === 'en' ? 'en-US' : 'ru-RU', {maximumFractionDigits: 0});
+    applyStaticI18n();
+    applyThemeButton();
+    setMonthTitle(currentMonthKey);
+    buildMethodsCards();
+    renderAll();
+  }
+
+  function applyCurrency(code){
+    currentCurrency = code;
+    try{ localStorage.setItem(CURRENCY_KEY, code); }catch(e){}
+    renderAll();
+  }
+
+  var langSelect = document.getElementById('langSelect');
+  var currencySelect = document.getElementById('currencySelect');
+  if(langSelect){
+    langSelect.value = currentLang;
+    langSelect.addEventListener('change', function(){ applyLanguage(langSelect.value); });
+  }
+  if(currencySelect){
+    currencySelect.value = currentCurrency;
+    currencySelect.addEventListener('change', function(){ applyCurrency(currencySelect.value); });
+  }
+  applyStaticI18n();
+
   function monthTitleText(monthKey){
     var parts = monthKey.split('-');
     var y = parts[0], m = parseInt(parts[1],10) - 1;
-    return (RU_MONTHS[m] || '') + ' ' + y;
+    var names = MONTH_NAMES[currentLang] || MONTH_NAMES.ru;
+    return (names[m] || '') + ' ' + y;
   }
   function setMonthTitle(monthKey){
-    var t = monthTitleText(monthKey);
-    document.getElementById('monthTitle').textContent = t.charAt(0).toUpperCase() + t.slice(1);
+    var title = monthTitleText(monthKey);
+    document.getElementById('monthTitle').textContent = title.charAt(0).toUpperCase() + title.slice(1);
   }
   function switchToMonth(monthKey){
     currentMonthKey = monthKey;

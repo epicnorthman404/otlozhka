@@ -217,31 +217,54 @@
   .block-head .totals b{color:var(--ink); font-weight:600; font-family:'IBM Plex Mono',monospace;}
 
   .item-row{
-    display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px;
+    display:grid; align-items:center; gap:8px 14px;
     padding:11px 2px; border-bottom:1px solid var(--line-soft);
+    grid-template-columns: 1fr 96px 96px minmax(120px,1fr);
+    grid-template-areas: "head plan fact progress";
+  }
+  .item-row-variable{
+    grid-template-columns: 1fr 110px;
+    grid-template-areas: "head amount";
+  }
+  @media (max-width:640px){
+    .item-row{
+      grid-template-columns: 1fr 1fr;
+      grid-template-areas: "head head" "plan fact" "progress progress";
+    }
+    .item-row-variable{
+      grid-template-columns: 1fr auto;
+      grid-template-areas: "head amount";
+    }
   }
   .item-row:last-of-type{border-bottom:none;}
+
+  .row-head{grid-area:head; display:flex; align-items:center; gap:8px; min-width:0;}
   .item-row .icon{font-size:17px; flex:none; width:22px; text-align:center;}
-  .item-row .name-field{flex:1 1 150px; min-width:130px;}
+  .item-row .name-field{flex:1; min-width:0;}
   .item-row .name-field input{
     border:none; background:transparent; color:var(--ink); font-size:14px; width:100%;
     padding:4px 2px; font-family:'Inter',sans-serif;
   }
   .item-row .name-field input:focus{outline:none; border-bottom:1px solid var(--ink-soft);}
-  .num-field{display:flex; flex-direction:column; gap:2px; width:96px; flex:0 0 auto;}
+
+  .num-field{display:flex; flex-direction:column; gap:2px; min-width:0;}
   .num-field label{font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft);}
   .num-field input{
     border:none; border-bottom:1px solid var(--line); background:transparent; color:var(--ink);
     font-size:14px; padding:3px 2px; width:100%; font-family:'IBM Plex Mono',monospace;
   }
   .num-field input:focus{outline:none; border-bottom:1px solid var(--primary);}
-  .progress-block{flex:1 1 140px; min-width:120px;}
+  .field-plan{grid-area:plan;}
+  .field-fact{grid-area:fact;}
+  .field-amount{grid-area:amount;}
+
+  .progress-block{grid-area:progress; min-width:0;}
   .progress-track{height:6px; border-radius:99px; background:var(--line-soft); overflow:hidden;}
   .progress-fill{height:100%; border-radius:99px; transition:width .25s ease, background-color .25s ease; background:var(--ink-soft);}
   .progress-label{margin-top:5px; font-size:12px; text-align:right;}
   .del-btn{
     border:none; background:transparent; color:var(--ink-soft); cursor:pointer;
-    font-size:16px; line-height:1; padding:4px; flex:none;
+    font-size:16px; line-height:1; padding:4px; flex:none; margin-left:auto;
   }
   .del-btn:hover{color:var(--danger);}
 
@@ -306,7 +329,6 @@
   footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--ink-soft);}
 
   @media (max-width:460px){
-    .num-field{width:78px;}
     .bill-row .bamount{width:76px;}
     .bill-row .bdate{width:110px;}
   }
@@ -815,7 +837,7 @@
     var kind = SECTION_KIND[sectionKey];
     var isVariable = sectionKey === 'variable';
     var wrap = document.createElement('div');
-    wrap.className = 'item-row';
+    wrap.className = 'item-row' + (isVariable ? ' item-row-variable' : '');
 
     var icon = document.createElement('span');
     icon.className = 'icon';
@@ -838,9 +860,13 @@
       persist(); renderSection(sectionKey); updateSummary();
     });
 
+    var rowHead = document.createElement('div');
+    rowHead.className = 'row-head';
+    rowHead.appendChild(icon); rowHead.appendChild(nameField); rowHead.appendChild(delBtn);
+
     if(isVariable){
       // No target here — variable spending isn't meant to be predicted, just recorded.
-      var amountField = document.createElement('div'); amountField.className = 'num-field';
+      var amountField = document.createElement('div'); amountField.className = 'num-field field-amount';
       var amountLabel = document.createElement('label'); amountLabel.textContent = t('amountFieldLabel');
       var inAmount = document.createElement('input');
       inAmount.type = 'number'; inAmount.inputMode = 'decimal'; inAmount.value = row.fact || ''; inAmount.placeholder = '0';
@@ -850,17 +876,17 @@
       });
       amountField.appendChild(amountLabel); amountField.appendChild(inAmount);
 
-      wrap.appendChild(icon); wrap.appendChild(nameField); wrap.appendChild(amountField); wrap.appendChild(delBtn);
+      wrap.appendChild(rowHead); wrap.appendChild(amountField);
       return wrap;
     }
 
-    var planField = document.createElement('div'); planField.className = 'num-field';
+    var planField = document.createElement('div'); planField.className = 'num-field field-plan';
     var planLabel = document.createElement('label'); planLabel.textContent = t('targetFieldLabel');
     var inPlan = document.createElement('input');
     inPlan.type = 'number'; inPlan.inputMode = 'decimal'; inPlan.value = row.plan || ''; inPlan.placeholder = '0';
     planField.appendChild(planLabel); planField.appendChild(inPlan);
 
-    var factField = document.createElement('div'); factField.className = 'num-field';
+    var factField = document.createElement('div'); factField.className = 'num-field field-fact';
     var factLabel = document.createElement('label'); factLabel.textContent = t('actualFieldLabel');
     var inFact = document.createElement('input');
     inFact.type = 'number'; inFact.inputMode = 'decimal'; inFact.value = row.fact || ''; inFact.placeholder = '0';
@@ -899,8 +925,8 @@
     inPlan.addEventListener('input', function(){ row.plan = num(inPlan.value); persist(); refreshRowVisuals(); });
     inFact.addEventListener('input', function(){ row.fact = num(inFact.value); persist(); refreshRowVisuals(); });
 
-    wrap.appendChild(icon); wrap.appendChild(nameField); wrap.appendChild(planField);
-    wrap.appendChild(factField); wrap.appendChild(progressBlock); wrap.appendChild(delBtn);
+    wrap.appendChild(rowHead); wrap.appendChild(planField);
+    wrap.appendChild(factField); wrap.appendChild(progressBlock);
 
     row._refresh = refreshRowVisuals;
     refreshRowVisuals();
